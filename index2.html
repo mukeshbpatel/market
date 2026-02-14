@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Indian Stock Market Momentum Tracker - NSE/BSE</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .stock-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .stock-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+
+        .stock-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stock-symbol {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .stock-price {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .positive {
+            color: #10b981;
+        }
+
+        .negative {
+            color: #ef4444;
+        }
+
+        .stock-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .momentum-score {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .high-momentum {
+            background: #10b981;
+            color: white;
+        }
+
+        .medium-momentum {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .low-momentum {
+            background: #6b7280;
+            color: white;
+        }
+
+        .ema-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .ema-positive {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid #10b981;
+        }
+
+        .ema-negative {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid #ef4444;
+        }
+
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        select {
+            padding: 12px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            font-size: 1em;
+            cursor: pointer;
+        }
+
+        .market-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .summary-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            color: white;
+        }
+
+        .summary-value {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .summary-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        #chartContainer {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .updating {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📈 Stock Market Movement Tracker</h1>
+            <p class="subtitle">NSE/BSE real-time market movement analysis for trading opportunities</p>
+            <p style="margin-top: 10px; font-size: 0.9em; color: #888;">
+                <span id="dataSource">🔄 Initializing... Please wait</span>
+            </p>
+            <p style="margin-top: 5px; font-size: 0.85em; color: #999;">
+                💡 The app attempts to fetch live Yahoo Finance data. If unavailable due to CORS/network, it uses realistic simulated prices based on actual stock ranges.
+            </p>
+        </header>
+
+        <div class="card" style="margin-bottom: 30px;">
+            <div class="market-summary">
+                <div class="summary-item">
+                    <div class="summary-value" id="totalStocks">0</div>
+                    <div class="summary-label">Tracked Stocks</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value positive" id="gainers">0</div>
+                    <div class="summary-label">Gainers</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value negative" id="losers">0</div>
+                    <div class="summary-label">Losers</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="avgMomentum">0</div>
+                    <div class="summary-label">Avg Momentum</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="aboveEmaCount">0</div>
+                    <div class="summary-label">Above EMA-200</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-value" id="avgEmaDeviation">0%</div>
+                    <div class="summary-label">Avg EMA Deviation</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button onclick="refreshData()">🔄 Refresh Data</button>
+            <button onclick="toggleAutoRefresh()">⏱️ <span id="autoRefreshText">Enable Auto-Refresh</span></button>
+            <select id="sortFilter" onchange="updateStockList()">
+                <option value="momentum">Sort by Momentum</option>
+                <option value="price">Sort by Price Change</option>
+                <option value="volume">Sort by Volume</option>
+                <option value="ema_above">Sort by EMA-200 (Above)</option>
+                <option value="ema_below">Sort by EMA-200 (Below)</option>
+                <option value="symbol">Sort by Symbol</option>
+            </select>
+            <select id="sectorFilter" onchange="updateStockList()">
+                <option value="all">All Sectors</option>
+                <option value="Technology">Technology</option>
+                <option value="Finance">Finance</option>
+                <option value="Energy">Energy</option>
+                <option value="Consumer">Consumer</option>
+                <option value="Pharma">Pharma</option>
+                <option value="Automobile">Automobile</option>
+                <option value="Infrastructure">Infrastructure</option>
+                <option value="Metals">Metals</option>
+                <option value="Power">Power</option>
+                <option value="Telecom">Telecom</option>
+                <option value="Cement">Cement</option>
+            </select>
+        </div>
+
+        <div id="chartContainer">
+            <h3 style="margin-bottom: 15px; color: #333;">Market Movement Chart</h3>
+            <div id="priceChart"></div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card">
+                <h3>🚀 High Momentum Stocks</h3>
+                <div class="stock-list" id="highMomentumList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📊 Top Gainers</h3>
+                <div class="stock-list" id="gainersList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📉 Top Losers</h3>
+                <div class="stock-list" id="losersList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📈 Most Above EMA-200</h3>
+                <div class="stock-list" id="aboveEmaList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3>📉 Most Below EMA-200</h3>
+                <div class="stock-list" id="belowEmaList">
+                    <div class="loading">Loading...</div>
+                </div>
+            </div>
+
+            <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <h3 style="color: white;">💡 EMA-200 Trading Signals</h3>
+                <div style="padding: 15px; line-height: 1.8;">
+                    <p style="margin-bottom: 10px;"><strong>Bullish:</strong> Price > EMA-200 indicates uptrend</p>
+                    <p style="margin-bottom: 10px;"><strong>Bearish:</strong> Price < EMA-200 indicates downtrend</p>
+                    <p style="margin-bottom: 10px;"><strong>Support/Resistance:</strong> EMA-200 acts as key level</p>
+                    <p><strong>Crossover:</strong> Price crossing EMA is a strong signal</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stockData = [];
+        let autoRefreshInterval = null;
+        let selectedStock = null;
+
+        // Use a more reliable API approach
+        async function fetchLivePrice(symbol) {
+            try {
+                // Try Yahoo Finance with simple fetch
+                const yahooSymbol = symbol + '.NS';
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=200d`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.chart && data.chart.result && data.chart.result[0]) {
+                    const result = data.chart.result[0];
+                    const meta = result.meta;
+                    const quote = result.indicators.quote[0];
+                    
+                    // Current price
+                    const currentPrice = meta.regularMarketPrice || quote.close[quote.close.length - 1];
+                    const previousClose = meta.previousClose || quote.close[quote.close.length - 2];
+                    
+                    // Price history (last 200 days)
+                    const priceHistory = quote.close.filter(p => p !== null);
+                    
+                    // Volume
+                    const currentVolume = quote.volume[quote.volume.length - 1] || 0;
+                    
+                    return {
+                        price: currentPrice,
+                        previousClose: previousClose,
+                        priceHistory: priceHistory,
+                        volume: currentVolume,
+                        success: true
+                    };
+                }
+                return { success: false };
+            } catch (error) {
+                console.log(`Could not fetch ${symbol}, using simulated data`);
+                return { success: false };
+            }
+        }
+
+        async function fetchAllLivePrices() {
+            // Show progress
+            let fetchedCount = 0;
+            
+            const promises = stockSymbols.map(async (stock, index) => {
+                // Add small delay between requests to avoid rate limiting
+                await new Promise(resolve => setTimeout(resolve, index * 100));
+                
+                const liveData = await fetchLivePrice(stock.symbol);
+                fetchedCount++;
+                
+                // Update progress
+                const progressPercent = Math.round((fetchedCount / stockSymbols.length) * 100);
+                document.getElementById('dataSource').innerHTML = `🔄 Loading... ${progressPercent}% (${fetchedCount}/${stockSymbols.length})`;
+                
+                if (liveData.success) {
+                    const priceChange = liveData.price - liveData.previousClose;
+                    const percentChange = (priceChange / liveData.previousClose) * 100;
+                    const momentum = calculateMomentum(percentChange, liveData.volume);
+                    
+                    // Calculate EMA-200
+                    const ema200 = calculateEMA(liveData.priceHistory, 200);
+                    const emaDeviation = ((liveData.price - ema200) / ema200) * 100;
+                    
+                    return {
+                        ...stock,
+                        price: liveData.price,
+                        priceChange: priceChange,
+                        percentChange: percentChange,
+                        volume: liveData.volume,
+                        momentum: momentum,
+                        ema200: ema200,
+                        emaDeviation: emaDeviation,
+                        priceHistory: liveData.priceHistory.slice(-30),
+                        fullHistory: liveData.priceHistory,
+                        isLive: true
+                    };
+                } else {
+                    // Fallback to simulated data if API fails
+                    return generateSingleStockData(stock);
+                }
+            });
+            
+            return Promise.all(promises);
+        }
+
+        function generateSingleStockData(stock) {
+            // Fallback function for simulated data with realistic Indian stock prices
+            let basePrice;
+            
+            // Set realistic price ranges based on actual stock prices
+            const priceRanges = {
+                'RELIANCE': [2800, 3000],
+                'TCS': [3800, 4200],
+                'HDFCBANK': [1600, 1800],
+                'INFY': [1700, 1900],
+                'ICICIBANK': [1100, 1300],
+                'HINDUNILVR': [2400, 2600],
+                'ITC': [420, 460],
+                'SBIN': [750, 850],
+                'BHARTIARTL': [1550, 1650],
+                'KOTAKBANK': [1750, 1850],
+                'LT': [3400, 3600],
+                'WIPRO': [550, 600],
+                'AXISBANK': [1050, 1150],
+                'HCLTECH': [1750, 1850],
+                'MARUTI': [12000, 13000],
+                'SUNPHARMA': [1700, 1800],
+                'TITAN': [3300, 3500],
+                'TATAMOTORS': [750, 850],
+                'TATASTEEL': [140, 160],
+                'NTPC': [330, 360],
+                'ONGC': [240, 270],
+                'POWERGRID': [290, 320],
+                'ULTRACEMCO': [10000, 11000],
+                'ADANIPORTS': [1150, 1250],
+                'BAJFINANCE': [6500, 7000],
+                'TECHM': [1650, 1750],
+                'DRREDDY': [1250, 1350],
+                'ASIANPAINT': [2400, 2600],
+                'NESTLEIND': [2200, 2400],
+                'BAJAJFINSV': [1550, 1650]
+            };
+            
+            const range = priceRanges[stock.symbol] || [200, 500];
+            basePrice = Math.random() * (range[1] - range[0]) + range[0];
+            
+            const fullHistory = generatePriceHistory(basePrice, 200);
+            const currentPrice = fullHistory[fullHistory.length - 1];
+            const previousPrice = fullHistory[fullHistory.length - 2];
+            
+            const priceChange = currentPrice - previousPrice;
+            const percentChange = (priceChange / previousPrice) * 100;
+            const volume = Math.floor(Math.random() * 5000000) + 500000;
+            const momentum = calculateMomentum(percentChange, volume);
+            
+            const ema200 = calculateEMA(fullHistory, 200);
+            const emaDeviation = ((currentPrice - ema200) / ema200) * 100;
+            
+            return {
+                ...stock,
+                price: currentPrice,
+                priceChange: priceChange,
+                percentChange: percentChange,
+                volume: volume,
+                momentum: momentum,
+                ema200: ema200,
+                emaDeviation: emaDeviation,
+                priceHistory: fullHistory.slice(-30),
+                fullHistory: fullHistory,
+                isLive: false
+            };
+        }
+
+        // Indian stock data - NSE/BSE
+        const stockSymbols = [
+            { symbol: 'RELIANCE', name: 'Reliance Industries Ltd.', sector: 'Energy' },
+            { symbol: 'TCS', name: 'Tata Consultancy Services', sector: 'Technology' },
+            { symbol: 'HDFCBANK', name: 'HDFC Bank Ltd.', sector: 'Finance' },
+            { symbol: 'INFY', name: 'Infosys Ltd.', sector: 'Technology' },
+            { symbol: 'ICICIBANK', name: 'ICICI Bank Ltd.', sector: 'Finance' },
+            { symbol: 'HINDUNILVR', name: 'Hindustan Unilever Ltd.', sector: 'Consumer' },
+            { symbol: 'ITC', name: 'ITC Ltd.', sector: 'Consumer' },
+            { symbol: 'SBIN', name: 'State Bank of India', sector: 'Finance' },
+            { symbol: 'BHARTIARTL', name: 'Bharti Airtel Ltd.', sector: 'Telecom' },
+            { symbol: 'KOTAKBANK', name: 'Kotak Mahindra Bank', sector: 'Finance' },
+            { symbol: 'LT', name: 'Larsen & Toubro Ltd.', sector: 'Infrastructure' },
+            { symbol: 'WIPRO', name: 'Wipro Ltd.', sector: 'Technology' },
+            { symbol: 'AXISBANK', name: 'Axis Bank Ltd.', sector: 'Finance' },
+            { symbol: 'HCLTECH', name: 'HCL Technologies Ltd.', sector: 'Technology' },
+            { symbol: 'MARUTI', name: 'Maruti Suzuki India Ltd.', sector: 'Automobile' },
+            { symbol: 'SUNPHARMA', name: 'Sun Pharmaceutical Ind.', sector: 'Pharma' },
+            { symbol: 'TITAN', name: 'Titan Company Ltd.', sector: 'Consumer' },
+            { symbol: 'TATAMOTORS', name: 'Tata Motors Ltd.', sector: 'Automobile' },
+            { symbol: 'TATASTEEL', name: 'Tata Steel Ltd.', sector: 'Metals' },
+            { symbol: 'NTPC', name: 'NTPC Ltd.', sector: 'Power' },
+            { symbol: 'ONGC', name: 'Oil & Natural Gas Corp.', sector: 'Energy' },
+            { symbol: 'POWERGRID', name: 'Power Grid Corp. of India', sector: 'Power' },
+            { symbol: 'ULTRACEMCO', name: 'UltraTech Cement Ltd.', sector: 'Cement' },
+            { symbol: 'ADANIPORTS', name: 'Adani Ports & SEZ Ltd.', sector: 'Infrastructure' },
+            { symbol: 'BAJFINANCE', name: 'Bajaj Finance Ltd.', sector: 'Finance' },
+            { symbol: 'TECHM', name: 'Tech Mahindra Ltd.', sector: 'Technology' },
+            { symbol: 'DRREDDY', name: 'Dr. Reddys Laboratories', sector: 'Pharma' },
+            { symbol: 'ASIANPAINT', name: 'Asian Paints Ltd.', sector: 'Consumer' },
+            { symbol: 'NESTLEIND', name: 'Nestle India Ltd.', sector: 'Consumer' },
+            { symbol: 'BAJAJFINSV', name: 'Bajaj Finserv Ltd.', sector: 'Finance' }
+        ];
+
+        function generateStockData() {
+            // This function is now async and fetches live data
+            return fetchAllLivePrices();
+        }
+
+        function calculateMomentum(percentChange, volume) {
+            // Momentum score based on price change and volume (adjusted for Indian market)
+            const priceScore = Math.abs(percentChange) * 12;
+            const volumeScore = (volume / 5000000) * 8;
+            return Math.min((priceScore + volumeScore), 100).toFixed(1);
+        }
+
+        function calculateEMA(data, period) {
+            // Calculate Exponential Moving Average
+            const k = 2 / (period + 1);
+            let ema = data[0]; // Start with first price as initial EMA
+            
+            for (let i = 1; i < data.length; i++) {
+                ema = (data[i] * k) + (ema * (1 - k));
+            }
+            
+            return ema;
+        }
+
+        function generatePriceHistory(basePrice, periods = 200) {
+            // Generate longer history for EMA-200 calculation
+            const history = [];
+            let price = basePrice - (Math.random() * 20 - 10);
+            for (let i = 0; i < periods; i++) {
+                price += (Math.random() - 0.5) * (price * 0.02); // 2% max daily movement
+                history.push(price);
+            }
+            return history;
+        }
+
+        function updateMarketSummary() {
+            const gainers = stockData.filter(s => s.priceChange > 0).length;
+            const losers = stockData.filter(s => s.priceChange < 0).length;
+            const avgMomentum = (stockData.reduce((sum, s) => sum + parseFloat(s.momentum), 0) / stockData.length).toFixed(1);
+            
+            // EMA metrics
+            const aboveEma = stockData.filter(s => s.emaDeviation > 0).length;
+            const avgEmaDeviation = (stockData.reduce((sum, s) => sum + s.emaDeviation, 0) / stockData.length).toFixed(2);
+            const avgEmaClass = avgEmaDeviation >= 0 ? 'positive' : 'negative';
+
+            document.getElementById('totalStocks').textContent = stockData.length;
+            document.getElementById('gainers').textContent = gainers;
+            document.getElementById('losers').textContent = losers;
+            document.getElementById('avgMomentum').textContent = avgMomentum;
+            document.getElementById('aboveEmaCount').textContent = aboveEma;
+            
+            const avgEmaElement = document.getElementById('avgEmaDeviation');
+            avgEmaElement.textContent = (avgEmaDeviation >= 0 ? '+' : '') + avgEmaDeviation + '%';
+            avgEmaElement.className = 'summary-value ' + avgEmaClass;
+        }
+
+        function createStockItem(stock) {
+            const priceClass = stock.priceChange >= 0 ? 'positive' : 'negative';
+            const arrow = stock.priceChange >= 0 ? '▲' : '▼';
+            
+            let momentumClass = 'low-momentum';
+            let momentumLabel = 'Low';
+            if (stock.momentum >= 70) {
+                momentumClass = 'high-momentum';
+                momentumLabel = 'High';
+            } else if (stock.momentum >= 40) {
+                momentumClass = 'medium-momentum';
+                momentumLabel = 'Medium';
+            }
+
+            // Format volume in Lakhs/Crores
+            let volumeText;
+            if (stock.volume >= 10000000) {
+                volumeText = (stock.volume / 10000000).toFixed(2) + ' Cr';
+            } else {
+                volumeText = (stock.volume / 100000).toFixed(2) + ' L';
+            }
+
+            // EMA deviation styling with badge
+            const emaBadgeClass = stock.emaDeviation >= 0 ? 'ema-positive' : 'ema-negative';
+            const emaSign = stock.emaDeviation >= 0 ? '+' : '';
+            const emaPercentage = `${emaSign}${stock.emaDeviation.toFixed(2)}%`;
+
+            return `
+                <div class="stock-item" onclick="showStockChart('${stock.symbol}')">
+                    <div class="stock-header">
+                        <span class="stock-symbol">${stock.symbol}</span>
+                        <span class="stock-price ${priceClass}">₹${stock.price.toFixed(2)}</span>
+                    </div>
+                    <div class="stock-details">
+                        <span>${stock.name}</span>
+                        <span class="${priceClass}">${arrow} ${stock.percentChange.toFixed(2)}%</span>
+                    </div>
+                    <div class="stock-details">
+                        <span>Volume: ${volumeText}</span>
+                        <span class="momentum-score ${momentumClass}">${momentumLabel} ${stock.momentum}</span>
+                    </div>
+                    <div class="stock-details" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
+                        <span style="color: #666; font-size: 0.85em;">EMA-200: ₹${stock.ema200.toFixed(2)}</span>
+                        <span class="ema-badge ${emaBadgeClass}">EMA ${emaPercentage}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function updateStockList() {
+            const sortBy = document.getElementById('sortFilter').value;
+            const sector = document.getElementById('sectorFilter').value;
+
+            let filtered = sector === 'all' ? [...stockData] : stockData.filter(s => s.sector === sector);
+
+            // Sort
+            filtered.sort((a, b) => {
+                switch(sortBy) {
+                    case 'momentum': return parseFloat(b.momentum) - parseFloat(a.momentum);
+                    case 'price': return b.percentChange - a.percentChange;
+                    case 'volume': return b.volume - a.volume;
+                    case 'ema_above': return b.emaDeviation - a.emaDeviation; // Most above EMA first
+                    case 'ema_below': return a.emaDeviation - b.emaDeviation; // Most below EMA first
+                    case 'symbol': return a.symbol.localeCompare(b.symbol);
+                }
+            });
+
+            // High momentum stocks
+            const highMomentum = filtered.filter(s => s.momentum >= 60);
+            document.getElementById('highMomentumList').innerHTML = 
+                highMomentum.length > 0 ? highMomentum.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No high momentum stocks</div>';
+
+            // Top gainers
+            const gainers = filtered.filter(s => s.priceChange > 0).sort((a, b) => b.percentChange - a.percentChange);
+            document.getElementById('gainersList').innerHTML = 
+                gainers.length > 0 ? gainers.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No gainers</div>';
+
+            // Top losers
+            const losers = filtered.filter(s => s.priceChange < 0).sort((a, b) => a.percentChange - b.percentChange);
+            document.getElementById('losersList').innerHTML = 
+                losers.length > 0 ? losers.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No losers</div>';
+
+            // Stocks most above EMA-200
+            const aboveEma = filtered.filter(s => s.emaDeviation > 0).sort((a, b) => b.emaDeviation - a.emaDeviation);
+            document.getElementById('aboveEmaList').innerHTML = 
+                aboveEma.length > 0 ? aboveEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks above EMA-200</div>';
+
+            // Stocks most below EMA-200
+            const belowEma = filtered.filter(s => s.emaDeviation < 0).sort((a, b) => a.emaDeviation - b.emaDeviation);
+            document.getElementById('belowEmaList').innerHTML = 
+                belowEma.length > 0 ? belowEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks below EMA-200</div>';
+        }
+
+        function showStockChart(symbol) {
+            selectedStock = stockData.find(s => s.symbol === symbol);
+            if (!selectedStock) return;
+
+            const days = Array.from({length: 30}, (_, i) => i + 1);
+            
+            // Price trace
+            const priceTrace = {
+                x: days,
+                y: selectedStock.priceHistory,
+                type: 'scatter',
+                mode: 'lines+markers',
+                name: 'Price',
+                line: {
+                    color: selectedStock.priceChange >= 0 ? '#10b981' : '#ef4444',
+                    width: 3
+                },
+                marker: {
+                    size: 6,
+                    color: selectedStock.priceChange >= 0 ? '#10b981' : '#ef4444'
+                }
+            };
+
+            // EMA-200 trace (flat line at EMA value for reference)
+            const emaTrace = {
+                x: days,
+                y: Array(30).fill(selectedStock.ema200),
+                type: 'scatter',
+                mode: 'lines',
+                name: 'EMA-200',
+                line: {
+                    color: '#667eea',
+                    width: 2,
+                    dash: 'dash'
+                }
+            };
+
+            const layout = {
+                title: `${selectedStock.symbol} - ${selectedStock.name}<br>` +
+                       `<span style="font-size: 0.85em;">Momentum: ${selectedStock.momentum} | ` +
+                       `EMA-200: ₹${selectedStock.ema200.toFixed(2)} | ` +
+                       `Deviation: ${selectedStock.emaDeviation >= 0 ? '+' : ''}${selectedStock.emaDeviation.toFixed(2)}%</span>`,
+                xaxis: { title: 'Days (Last 30)' },
+                yaxis: { title: 'Price (₹)' },
+                hovermode: 'closest',
+                plot_bgcolor: '#f8f9fa',
+                paper_bgcolor: 'white',
+                showlegend: true,
+                legend: {
+                    x: 0,
+                    y: 1,
+                    bgcolor: 'rgba(255,255,255,0.8)'
+                }
+            };
+
+            Plotly.newPlot('priceChart', [priceTrace, emaTrace], layout, {responsive: true});
+        }
+
+        async function refreshData() {
+            document.querySelectorAll('.stock-list').forEach(el => {
+                el.classList.add('updating');
+            });
+
+            // Show loading message
+            document.getElementById('dataSource').innerHTML = '🔄 Starting data fetch...';
+            document.getElementById('highMomentumList').innerHTML = '<div class="loading">Loading stock data...</div>';
+            document.getElementById('gainersList').innerHTML = '<div class="loading">Loading stock data...</div>';
+            document.getElementById('losersList').innerHTML = '<div class="loading">Loading stock data...</div>';
+            document.getElementById('aboveEmaList').innerHTML = '<div class="loading">Loading stock data...</div>';
+            document.getElementById('belowEmaList').innerHTML = '<div class="loading">Loading stock data...</div>';
+
+            try {
+                stockData = await generateStockData();
+                
+                // Check how many stocks have live data
+                const liveDataCount = stockData.filter(s => s.isLive).length;
+                const timestamp = new Date().toLocaleTimeString('en-IN', { hour12: true });
+                
+                if (liveDataCount > 20) {
+                    document.getElementById('dataSource').innerHTML = 
+                        `✅ Live NSE data (${liveDataCount}/${stockData.length} stocks) - Updated: ${timestamp}`;
+                } else if (liveDataCount > 0) {
+                    document.getElementById('dataSource').innerHTML = 
+                        `⚠️ Partial live data (${liveDataCount}/${stockData.length} stocks) + simulated - Updated: ${timestamp}`;
+                } else {
+                    document.getElementById('dataSource').innerHTML = 
+                        `📊 Using realistic simulated data (API unavailable) - Updated: ${timestamp}`;
+                }
+                
+                updateMarketSummary();
+                updateStockList();
+                
+                if (selectedStock) {
+                    const updatedStock = stockData.find(s => s.symbol === selectedStock.symbol);
+                    if (updatedStock) {
+                        showStockChart(updatedStock.symbol);
+                    }
+                } else if (stockData.length > 0) {
+                    showStockChart(stockData[0].symbol);
+                }
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                document.getElementById('dataSource').innerHTML = 
+                    '⚠️ Error loading data. Using simulated prices with realistic ranges.';
+                
+                // Generate fallback data
+                stockData = stockSymbols.map(stock => generateSingleStockData(stock));
+                updateMarketSummary();
+                updateStockList();
+                if (stockData.length > 0) {
+                    showStockChart(stockData[0].symbol);
+                }
+            }
+
+            document.querySelectorAll('.stock-list').forEach(el => {
+                el.classList.remove('updating');
+            });
+        }
+
+        function toggleAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                document.getElementById('autoRefreshText').textContent = 'Enable Auto-Refresh';
+            } else {
+                autoRefreshInterval = setInterval(refreshData, 10000);
+                document.getElementById('autoRefreshText').textContent = 'Disable Auto-Refresh';
+            }
+        }
+
+        // Initialize
+        refreshData();
+    </script>
+</body>
+</html>
