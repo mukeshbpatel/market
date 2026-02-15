@@ -384,7 +384,7 @@
             try {
                 // Try Yahoo Finance with CORS proxy for deployed versions
                 const yahooSymbol = symbol + '.NS';
-                const baseUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=200d`;
+                const baseUrl = 'https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=500d';
                 const url = USE_CORS_PROXY ? CORS_PROXY + encodeURIComponent(baseUrl) : baseUrl;
                 
                 const response = await fetch(url);
