@@ -3,42 +3,33 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Market Dashboard</title>
+  <title>Weekly Movement</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Market Dashboard</h1>
+    <h1>Weekly Movement</h1>
     <nav>
       <a href="index.html">Dashboard</a>
       <a href="stock-tracker.html">Stock Tracker</a>
       <a href="weekly-movement.html">Weekly Movement</a>
     </nav>
   </header>
-
   <main>
-    <section id="nifty">
-      <h2>Nifty 50 Movement</h2>
-      <div id="nifty-summary">Loading...</div>
+    <section id="weekly-gainers">
+      <h2>Weekly Top Gainers</h2>
+      <ul id="weekly-gainers-list"></ul>
     </section>
-
-    <section id="top-gainers">
-      <h2>Top Gainers</h2>
-      <ul id="gainers-list"></ul>
+    <section id="weekly-losers">
+      <h2>Weekly Top Losers</h2>
+      <ul id="weekly-losers-list"></ul>
     </section>
-
-    <section id="top-losers">
-      <h2>Top Losers</h2>
-      <ul id="losers-list"></ul>
-    </section>
-
-    <section id="volume-gainers">
-      <h2>Volume Gainers</h2>
-      <ul id="volume-list"></ul>
+    <section id="weekly-volume">
+      <h2>Weekly Volume Crackers</h2>
+      <ul id="weekly-volume-list"></ul>
     </section>
   </main>
-
   <script src="assets/js/data.js"></script>
   <script src="assets/js/app.js"></script>
 </body>

@@ -3,42 +3,34 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Market Dashboard</title>
+  <title>Stock Tracker</title>
   <link rel="stylesheet" href="assets/css/style.css">
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
   <header>
-    <h1>Market Dashboard</h1>
+    <h1>Stock Tracker</h1>
     <nav>
       <a href="index.html">Dashboard</a>
       <a href="stock-tracker.html">Stock Tracker</a>
       <a href="weekly-movement.html">Weekly Movement</a>
     </nav>
   </header>
-
   <main>
-    <section id="nifty">
-      <h2>Nifty 50 Movement</h2>
-      <div id="nifty-summary">Loading...</div>
-    </section>
-
-    <section id="top-gainers">
-      <h2>Top Gainers</h2>
-      <ul id="gainers-list"></ul>
-    </section>
-
-    <section id="top-losers">
-      <h2>Top Losers</h2>
-      <ul id="losers-list"></ul>
-    </section>
-
-    <section id="volume-gainers">
-      <h2>Volume Gainers</h2>
-      <ul id="volume-list"></ul>
-    </section>
+    <table id="stocks-table">
+      <thead>
+        <tr>
+          <th>Symbol</th>
+          <th>Price</th>
+          <th>Change %</th>
+          <th>Volume</th>
+          <th>Vol Avg % (100d)</th>
+          <th>RSI</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </main>
-
   <script src="assets/js/data.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
