@@ -282,7 +282,7 @@
                 </div>
                 <div class="summary-item">
                     <div class="summary-value" id="aboveEmaCount">0</div>
-                    <div class="summary-label">Above EMA-200</div>
+                    <div class="summary-label">Above EMA-50</div>
                 </div>
                 <div class="summary-item">
                     <div class="summary-value" id="avgEmaDeviation">0%</div>
@@ -298,8 +298,8 @@
                 <option value="momentum">Sort by Momentum</option>
                 <option value="price">Sort by Price Change</option>
                 <option value="volume">Sort by Volume</option>
-                <option value="ema_above">Sort by EMA-200 (Above)</option>
-                <option value="ema_below">Sort by EMA-200 (Below)</option>
+                <option value="ema_above">Sort by EMA-50 (Above)</option>
+                <option value="ema_below">Sort by EMA-50 (Below)</option>
                 <option value="symbol">Sort by Symbol</option>
             </select>
             <select id="sectorFilter" onchange="updateStockList()">
@@ -346,25 +346,25 @@
             </div>
 
             <div class="card">
-                <h3>📈 Most Above EMA-200</h3>
+                <h3>📈 Most Above EMA-50</h3>
                 <div class="stock-list" id="aboveEmaList">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
 
             <div class="card">
-                <h3>📉 Most Below EMA-200</h3>
+                <h3>📉 Most Below EMA-50</h3>
                 <div class="stock-list" id="belowEmaList">
                     <div class="loading">Loading...</div>
                 </div>
             </div>
 
             <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
-                <h3 style="color: white;">💡 EMA-200 Trading Signals</h3>
+                <h3 style="color: white;">💡 EMA-50 Trading Signals</h3>
                 <div style="padding: 15px; line-height: 1.8;">
-                    <p style="margin-bottom: 10px;"><strong>Bullish:</strong> Price > EMA-200 indicates uptrend</p>
-                    <p style="margin-bottom: 10px;"><strong>Bearish:</strong> Price < EMA-200 indicates downtrend</p>
-                    <p style="margin-bottom: 10px;"><strong>Support/Resistance:</strong> EMA-200 acts as key level</p>
+                    <p style="margin-bottom: 10px;"><strong>Bullish:</strong> Price > EMA-50 indicates uptrend</p>
+                    <p style="margin-bottom: 10px;"><strong>Bearish:</strong> Price < EMA-50 indicates downtrend</p>
+                    <p style="margin-bottom: 10px;"><strong>Support/Resistance:</strong> EMA-50 acts as key level</p>
                     <p><strong>Crossover:</strong> Price crossing EMA is a strong signal</p>
                 </div>
             </div>
@@ -403,7 +403,7 @@
                     const currentPrice = meta.regularMarketPrice || quote.close[quote.close.length - 1];
                     const previousClose = meta.previousClose || quote.close[quote.close.length - 2];
                     
-                    // Price history (last 200 days)
+                    // Price history (last 50 days)
                     const priceHistory = quote.close.filter(p => p !== null);
                     
                     // Volume
@@ -444,9 +444,9 @@
                     const percentChange = (priceChange / liveData.previousClose) * 100;
                     const momentum = calculateMomentum(percentChange, liveData.volume);
                     
-                    // Calculate EMA-200
-                    const ema200 = calculateEMA(liveData.priceHistory, 200);
-                    const emaDeviation = ((liveData.price - ema200) / ema200) * 100;
+                    // Calculate EMA-50
+                    const ema50 = calculateEMA(liveData.priceHistory, 50);
+                    const emaDeviation = ((liveData.price - ema50) / ema50) * 100;
                     
                     return {
                         ...stock,
@@ -455,7 +455,7 @@
                         percentChange: percentChange,
                         volume: liveData.volume,
                         momentum: momentum,
-                        ema200: ema200,
+                        ema50: ema50,
                         emaDeviation: emaDeviation,
                         priceHistory: liveData.priceHistory.slice(-30),
                         fullHistory: liveData.priceHistory,
@@ -520,8 +520,8 @@
             const volume = Math.floor(Math.random() * 5000000) + 500000;
             const momentum = calculateMomentum(percentChange, volume);
             
-            const ema200 = calculateEMA(fullHistory, 200);
-            const emaDeviation = ((currentPrice - ema200) / ema200) * 100;
+            const ema50 = calculateEMA(fullHistory, 50);
+            const emaDeviation = ((currentPrice - ema50) / ema50) * 100;
             
             return {
                 ...stock,
@@ -530,7 +530,7 @@
                 percentChange: percentChange,
                 volume: volume,
                 momentum: momentum,
-                ema200: ema200,
+                ema50: ema50,
                 emaDeviation: emaDeviation,
                 priceHistory: fullHistory.slice(-30),
                 fullHistory: fullHistory,
@@ -670,7 +670,7 @@
                         <span class="momentum-score ${momentumClass}">${momentumLabel} ${stock.momentum}</span>
                     </div>
                     <div class="stock-details" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #e5e7eb;">
-                        <span style="color: #666; font-size: 0.85em;">EMA-200: ₹${stock.ema200.toFixed(2)}</span>
+                        <span style="color: #666; font-size: 0.85em;">EMA-50: ₹${stock.ema50.toFixed(2)}</span>
                         <span class="ema-badge ${emaBadgeClass}">EMA ${emaPercentage}</span>
                     </div>
                 </div>
@@ -710,15 +710,15 @@
             document.getElementById('losersList').innerHTML = 
                 losers.length > 0 ? losers.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No losers</div>';
 
-            // Stocks most above EMA-200
+            // Stocks most above EMA-50
             const aboveEma = filtered.filter(s => s.emaDeviation > 0).sort((a, b) => b.emaDeviation - a.emaDeviation);
             document.getElementById('aboveEmaList').innerHTML = 
-                aboveEma.length > 0 ? aboveEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks above EMA-200</div>';
+                aboveEma.length > 0 ? aboveEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks above EMA-50</div>';
 
-            // Stocks most below EMA-200
+            // Stocks most below EMA-50
             const belowEma = filtered.filter(s => s.emaDeviation < 0).sort((a, b) => a.emaDeviation - b.emaDeviation);
             document.getElementById('belowEmaList').innerHTML = 
-                belowEma.length > 0 ? belowEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks below EMA-200</div>';
+                belowEma.length > 0 ? belowEma.slice(0, 5).map(createStockItem).join('') : '<div class="loading">No stocks below EMA-50</div>';
         }
 
         function showStockChart(symbol) {
@@ -744,13 +744,13 @@
                 }
             };
 
-            // EMA-200 trace (flat line at EMA value for reference)
+            // EMA-50 trace (flat line at EMA value for reference)
             const emaTrace = {
                 x: days,
-                y: Array(30).fill(selectedStock.ema200),
+                y: Array(30).fill(selectedStock.ema50),
                 type: 'scatter',
                 mode: 'lines',
-                name: 'EMA-200',
+                name: 'EMA-50',
                 line: {
                     color: '#667eea',
                     width: 2,
@@ -761,7 +761,7 @@
             const layout = {
                 title: `${selectedStock.symbol} - ${selectedStock.name}<br>` +
                        `<span style="font-size: 0.85em;">Momentum: ${selectedStock.momentum} | ` +
-                       `EMA-200: ₹${selectedStock.ema200.toFixed(2)} | ` +
+                       `EMA-50: ₹${selectedStock.ema50.toFixed(2)} | ` +
                        `Deviation: ${selectedStock.emaDeviation >= 0 ? '+' : ''}${selectedStock.emaDeviation.toFixed(2)}%</span>`,
                 xaxis: { title: 'Days (Last 30)' },
                 yaxis: { title: 'Price (₹)' },
