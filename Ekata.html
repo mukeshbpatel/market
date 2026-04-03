@@ -440,7 +440,7 @@
 
     .cg {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 6px;
       padding: 0 8px;
       width: 100%;
@@ -818,13 +818,13 @@
           जिथे सुरक्षितता, स्वच्छता, विकास<br>
           आणि एकात्मता यांना समान महत्त्व आहे.
         </div>
-        <div class="vb">☕ कपबशीला मतदान करा</div>
+        <div class="vb">☕ कपबशीला मतदान करा ☕</div>
       </div>
     </div>
 
     <!-- SLIDE 3: PREAMBLE -->
     <div class="slide s3" id="slide-2">
-      <div class="pre-h">प्रस्तावना</div>
+      <div class="pre-h">✦ प्रस्तावना ✦</div>
       <div class="pre-box">
         <div class="pre-txt">
           प्रत्येक रहिवाशाच्या गरजा ओळखून,<br>
@@ -839,7 +839,7 @@
         </div>
       </div>
       <div class="pre-motto">आपला विश्वास, आमची जबाबदारी</div>
-      <div class="work-sp">✦ काम बोलतं ✦</div>
+      <div class="work-sp">☕ काम बोलतं ☕</div>
     </div>
 
     <!-- SLIDE 4: ACHIEVEMENTS -->
@@ -921,7 +921,7 @@
           <div class="vd">रविवार, १२ एप्रिल २०२६</div>
           <div class="vtm">⏰ सकाळी ९ ते दुपारी ३</div>
         </div>
-        <div class="fs">यशराज एकता पॅनल ✦ कपबशी</div>
+        <div class="fs">✦ यशराज एकता पॅनल ✦ कपबशी ✦</div>
       </div>
     </div>
 
@@ -938,13 +938,13 @@
     // --- GENERAL CATEGORY (12) ---
     const GEN = [
       { n: 'चंद्रशेखर महाजन', f: 'A-101', q: 'BA, Business', k: 'chandrasekhar_mahajan' },
-      { n: 'उमेशचंद्र बजाज', f: 'C-102', q: 'BA, Job', k: 'umeshchandra_bajaj' },
+      { n: 'उमेशचंद्र बजाज', f: 'C-102', q: 'BA, Service', k: 'umeshchandra_bajaj' },
       { n: 'संतोष जगताप', f: 'C-303', q: 'Automobile Eng.', k: 'santosh_jagtap_c' },
       { n: 'अमोल नागवडे', f: 'E-602', q: 'DEE, Service', k: 'amol_nagavde' },
       { n: 'दिलीप भामे', f: 'E-503', q: 'BE Civil, Business', k: 'dilip_bhame' },
       { n: 'संतोष कामथे', f: 'G-304', q: 'BSc, Service', k: 'santosh_kamathe' },
       { n: 'बंडोपंत नागाळे', f: 'J-602', q: 'MSc Comp, Sr. Tech Lead', k: 'bandopant_nagale' },
-      { n: 'प्रमोद कलशेट्टी', f: 'J-603', q: 'MSc Comp Sci, Job', k: 'pramod_kalshetti' },
+      { n: 'प्रमोद कलशेट्टी', f: 'J-603', q: 'MSc Comp Sci, Service', k: 'pramod_kalshetti' },
       { n: 'बाळासाहेब जगताप', f: 'K-701', q: 'Navy Veteran', k: 'balasaheb_jagtap' },
       { n: 'विकास डोंगरे', f: 'K-603', q: '', k: 'vikas_dongre' },
       { n: 'सिद्धेश्वर भोसले', f: 'K-406', q: '', k: 'siddeshwar_bhosle' },
@@ -955,7 +955,7 @@
     GEN.forEach((c, i) => {
       const d = document.createElement('div');
       d.className = 'cc' + (c.unop ? ' unop' : '');
-      d.dataset.delay = i * 160;
+      d.dataset.delay = i * 200;
       d.innerHTML = `${c.unop ? '<span class="unop-badge">बिनविरोधक</span>' : ''}
     <img class="cp" src="assets/img/${c.f}.jpg" alt="${c.n}">
     <div class="cn">${c.n}</div>
