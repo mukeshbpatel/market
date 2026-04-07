@@ -406,7 +406,7 @@ const GEN = [
   {n:'बाळासाहेब जगताप',f:'K-701',q:'Indian Navy, Assoc. Director',k:'balasaheb_jagtap'},
   {n:'विकास डोंगरे',f:'K-603',q:'',k:'vikas_dongre'},
   {n:'सिद्धेश्वर भोसले',f:'K-406',q:'',k:'siddeshwar_bhosle'},
-  {n:'वर्षा श्रीवास्तव',f:'C-14/15',q:'HSC, Business',k:'varsha_shrivastav',unop:true},
+  {n:'वर्षा श्रीवास्तव',f:'C-14-15',q:'HSC, Business',k:'varsha_shrivastav',unop:true},
 ];
 
 const SPEC = [
@@ -436,7 +436,7 @@ GEN.forEach((c,i) => {
   d.className = 'cc' + (c.unop?' unop':'');
   d.dataset.delay = i*80;
   d.innerHTML = `${c.unop?'<span class="unb">बिनविरोधक</span>':''}
-    <img class="cp" src="${PH[c.k]}" alt="${c.n}">
+    <img class="cp" src="${c.f}.jpg" alt="${c.n}">
     <div class="cn">${c.n}</div>
     <div class="cf">${c.f}</div>
     <div class="cq">${c.q}</div>`;
@@ -537,7 +537,7 @@ function setupScroll(wrapperId, innerId, speed) {
 setupScroll('achWrap','achInner', 28);
 setupScroll('comWrap','comInner', 28);
 
-const DUR=[4000,5000,5500,6000,9000,9000,7500,7500,6500];
+const DUR=[8000,10000,11000,12000,18000,18000,15000,15000,14000];
 let cur=0, playing=true, elapsed=0, startTime=Date.now();
 
 function updateDots(){document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('active',i===cur));}
