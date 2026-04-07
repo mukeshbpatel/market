@@ -79,7 +79,7 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
   padding:17px 20px;margin:0 13px;position:relative;}
 .pre-box::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
   background:linear-gradient(90deg,transparent,var(--g),transparent);}
-.pre-txt{font-size:14px;color:var(--cr);line-height:1.85;text-align:center;
+.pre-txt{font-size:18px;color:var(--cr);line-height:1.85;text-align:center;
   opacity:0;animation:fi 1s .5s ease forwards;}
 .pre-motto{font-size:19px;font-weight:700;color:var(--gl);text-align:center;margin-top:14px;
   padding:9px;border:2px solid rgba(212,160,23,.4);border-radius:10px;
@@ -95,13 +95,13 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 .bhav-item{display:flex;align-items:flex-start;gap:10px;margin-bottom:11px;
   opacity:0;transform:translateY(15px);transition:all .5s ease;}
 .bhav-item.vis{opacity:1;transform:translateY(0);}
-.bhav-ico{font-size:20px;min-width:26px;margin-top:1px;}
-.bhav-txt{font-size:13px;color:var(--cr);line-height:1.6;}
+.bhav-ico{font-size:22px;min-width:26px;margin-top:1px;}
+.bhav-txt{font-size:19px;color:var(--cr);line-height:1.6;}
 .bhav-txt strong{color:var(--gl);}
 .bhav-banner{background:linear-gradient(135deg,rgba(139,0,0,.4),rgba(196,18,48,.3));
   border:1px solid var(--gl);border-radius:10px;padding:10px 16px;margin:0 12px;
   text-align:center;opacity:0;animation:fi 1s 2s ease forwards;}
-.bhav-banner-txt{font-size:14px;color:var(--gl);font-weight:700;line-height:1.5;}
+.bhav-banner-txt{font-size:17px;color:var(--gl);font-weight:500;line-height:1.5;}
 
 /* SLIDE 5 – ACHIEVEMENTS (scrolling list) */
 .scroll-wrap{width:100%;flex:1;overflow:hidden;position:relative;mask-image:linear-gradient(to bottom,transparent 0%,black 8%,black 92%,transparent 100%);}
@@ -134,17 +134,17 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
   text-align:center;opacity:0;transform:scale(.75);transition:all .4s ease;position:relative;}
 .cc.vis{opacity:1;transform:scale(1);}
 .cc.unop{border-color:rgba(50,205,50,.55);background:linear-gradient(135deg,rgba(50,205,50,.1),rgba(0,80,0,.08));}
-.unb{position:absolute;top:-5px;right:-3px;background:#228B22;color:#fff;font-size:6.5px;
-  padding:2px 4px;border-radius:7px;font-weight:700;}
+.unb{position:absolute;top:-5px;right:-3px;background:#228B22;color:#fff;font-size:11px;
+  padding:2px 4px;border-radius:7px;font-weight5700;}
 .cp{width:50px;height:50px;border-radius:50%;margin:0 auto 4px;border:2px solid var(--gl);
   object-fit:cover;box-shadow:0 0 7px rgba(212,160,23,.4);}
-.cn{font-size:8.5px;color:var(--cr);font-weight:700;line-height:1.3;}
-.cf{font-size:7.5px;color:var(--gl);margin-top:2px;}
-.cq{font-size:7px;color:rgba(255,248,231,.6);margin-top:1px;line-height:1.25;}
+.cn{font-size:13px;color:var(--cr);font-weight:500;line-height:1.3;}
+.cf{font-size:11px;color:var(--gl);margin-top:2px;}
+.cq{font-size:10px;color:rgba(255,248,231,.6);margin-top:1px;line-height:1.25;}
 /* special category */
 .spec-grid{display:flex;flex-direction:column;gap:9px;padding:0 11px;width:100%;}
 .cat-sec{border:1px solid rgba(212,160,23,.25);border-radius:11px;padding:9px 11px;}
-.cat-sec-lbl{font-size:10px;font-weight:700;color:var(--gl);letter-spacing:.5px;margin-bottom:7px;
+.cat-sec-lbl{font-size:12px;font-weight:500;color:var(--gl);letter-spacing:.5px;margin-bottom:7px;
   text-align:center;padding:3px 10px;border-radius:10px;display:inline-block;}
 .cat-row{display:flex;gap:9px;justify-content:center;}
 .spc{flex:0 0 auto;width:100px;background:rgba(212,160,23,.08);border:1.5px solid rgba(212,160,23,.3);
@@ -154,9 +154,9 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 .spc.unop{border-color:rgba(50,205,50,.5);}
 .scp{width:56px;height:56px;border-radius:50%;margin:0 auto 4px;border:2.5px solid var(--gl);
   object-fit:cover;box-shadow:0 0 9px rgba(212,160,23,.4);}
-.scn{font-size:9.5px;color:var(--cr);font-weight:700;line-height:1.3;}
-.scf{font-size:8.5px;color:var(--gl);margin-top:2px;}
-.scq{font-size:7.5px;color:rgba(255,248,231,.6);margin-top:2px;line-height:1.3;}
+.scn{font-size:13px;color:var(--cr);font-weight:500;line-height:1.3;}
+.scf{font-size:11px;color:var(--gl);margin-top:2px;}
+.scq{font-size:10px;color:rgba(255,248,231,.6);margin-top:2px;line-height:1.3;}
 
 /* SLIDE 9 – VOTE */
 .fe{font-size:44px;animation:bnc .8s ease-in-out infinite alternate;display:block;margin-bottom:7px;}
@@ -165,11 +165,11 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 .vsb{font-size:52px;display:block;margin:5px auto;animation:pg 1.5s ease-in-out infinite;}
 @keyframes pg{0%,100%{filter:drop-shadow(0 0 10px var(--g));}50%{filter:drop-shadow(0 0 26px var(--gl));}}
 .vdb{background:linear-gradient(135deg,var(--mr),#c41230);border-radius:14px;padding:13px 20px;
-  margin:11px auto;border:2px solid var(--gl);box-shadow:0 0 28px rgba(196,18,48,.5);
+  margin:14px auto;border:2px solid var(--gl);box-shadow:0 0 28px rgba(196,18,48,.5);
   max-width:290px;opacity:0;animation:zi .8s 1s ease forwards;}
-.vdl{font-size:11px;color:rgba(255,255,255,.8);letter-spacing:2px;margin-bottom:4px;}
+.vdl{font-size:14px;color:rgba(255,255,255,.8);letter-spacing:2px;margin-bottom:4px;}
 .vd{font-size:20px;font-weight:900;color:#fff;margin-bottom:3px;}
-.vtm{font-size:13px;color:var(--gl);letter-spacing:1px;}
+.vtm{font-size:15px;color:var(--gl);letter-spacing:1px;}
 .fs{font-size:17px;font-weight:900;background:linear-gradient(90deg,var(--gl),var(--sf),var(--gl));
   background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
   background-clip:text;animation:ts 2s linear infinite,fi 1s 1.5s ease forwards;
@@ -212,6 +212,7 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 <!-- ===== SLIDE 2: SLOGAN ===== -->
 <div class="sl bg2" id="sl-1">
   <div style="text-align:center;padding:20px;">
+    <img src="assets/img/logo.png" alt="Badge Icon" >
     <div class="sltxt l1">एकतेतून विश्वास</div>
     <div class="sltxt l2">विश्वासतून विकास</div>
     <div class="dvl"></div>
@@ -227,6 +228,7 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 
 <!-- ===== SLIDE 3: PREAMBLE ===== -->
 <div class="sl bg3" id="sl-2">
+  <div class="sltxt l1">यशराज एकता पॅनल</div>
   <div class="sec-hd">प्रस्तावना</div>
   <div class="pre-box">
     <div class="pre-txt">
@@ -353,7 +355,9 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 <!-- ===== SLIDE 9: VOTE APPEAL ===== -->
 <div class="sl bg9" id="sl-8">
   <div style="text-align:center;padding:16px;">
-    <span class="fe">🔥</span>
+    <span class="fe">
+      <img src="assets/img/logo.png" alt="Badge Icon" >
+    </span>
     <div class="vt">आपल्या सोसायटीचा अभिमान —<br>
       <span style="color:var(--sf)">कपबशीला मतदान!</span></div>
     <span class="vsb">☕</span>
@@ -377,29 +381,29 @@ body{background:#111;display:flex;align-items:center;justify-content:center;min-
 <script>
 
 const GEN = [
-  {n:'चंद्रशेखर महाजन',f:'A-101',q:'BA, Business',k:'chandrasekhar_mahajan'},
-  {n:'उमेशचंद्र बजाज',f:'C-102',q:'BA, Job',k:'umeshchandra_bajaj'},
+  {n:'चंद्रशेखर महाजन',f:'A-101',q:'BA, Entrepreneur',k:'chandrasekhar_mahajan'},
+  {n:'उमेशचंद्र बजाज',f:'C-102',q:'BA, Service',k:'umeshchandra_bajaj'},
   {n:'संतोष जगताप',f:'C-303',q:'Automobile Eng., Sr. Manager',k:'santosh_jagtap_c'},
   {n:'अमोल नागवडे',f:'E-602',q:'DEE Sr. Engineer, Konecranes',k:'amol_nagavde'},
-  {n:'दिलीप भामे',f:'E-503',q:'BE Civil, Business',k:'dilip_bhame'},
+  {n:'दिलीप भामे',f:'E-503',q:'BE Civil, Entrepreneur',k:'dilip_bhame'},
   {n:'संतोष कामथे',f:'G-304',q:'BSc, Service',k:'santosh_kamathe'},
-  {n:'बंडोपंत नागाळे',f:'J-602',q:'MSc Computer, Sr. Tech Lead',k:'bandopant_nagale'},
-  {n:'प्रमोद कलशेट्टी',f:'J-603',q:'MSc Comp Sci, Job',k:'pramod_kalshetti'},
-  {n:'बाळासाहेब जगताप',f:'K-701',q:'Indian Navy, Assoc. Director',k:'balasaheb_jagtap'},
-  {n:'विकास डोंगरे',f:'K-603',q:'',k:'vikas_dongre'},
-  {n:'सिद्धेश्वर भोसले',f:'K-406',q:'',k:'siddeshwar_bhosle'},
-  {n:'वर्षा श्रीवास्तव',f:'C-14-15',q:'HSC, Business',k:'varsha_shrivastav'},
+  {n:'बंडोपंत नागाळे',f:'J-602',q:'MSc Computer',k:'bandopant_nagale'},
+  {n:'प्रमोद कलशेट्टी',f:'J-603',q:'MSc Comp Sci',k:'pramod_kalshetti'},
+  {n:'बाळासाहेब जगताप',f:'K-701',q:'Indian Navy',k:'balasaheb_jagtap'},
+  {n:'विकास डोंगरे',f:'K-603',q:'Bsc. Comp Sci',k:'vikas_dongre'},
+  {n:'सिद्धेश्वर भोसले',f:'K-406',q:'B.Com, GDC & A',k:'siddeshwar_bhosle'},
+  {n:'वर्षा श्रीवास्तव',f:'C-14-15',q:'HSC, Entrepreneur',k:'varsha_shrivastav'},
 ];
 
 const SPEC = [
   {label:'महिला राखीव गट',color:'#8B0050',
    cands:[
      {n:'वंदना डावरे',f:'D-203',q:'BA, House Wife',k:'vandana_davare'},
-     {n:'अश्विनी जगताप',f:'B-502',q:'BE Computer, Software Eng.',k:'ashwini_jagtap'},
+     {n:'अश्विनी जगताप',f:'B-502',q:'BE Computer',k:'ashwini_jagtap'},
    ]},
   {label:'इतर मागासवर्गीय गट',color:'#1a4f8a',
    cands:[
-     {n:'विजयकुमार जठार',f:'F-303',q:'MBA (Mktg), Service',k:'vijay_kumar_jathar'},
+     {n:'विजयकुमार जठार',f:'F-303',q:'MBA (Mktg)',k:'vijay_kumar_jathar'},
    ]},
   {label:'भटक्या विमुक्त जाती जमाती',color:'#5a3a00',
    cands:[
@@ -407,7 +411,7 @@ const SPEC = [
    ]},
   {label:'अनुसूचित जाती जमाती',color:'#1a5a1a',
    cands:[
-     {n:'अमित बाबासो दुर्गे',f:'K-508',q:'BE (IT), Solution Architect, MNC',k:'amit_durge',unop:true},
+     {n:'अमित दुर्गे',f:'K-508',q:'BE IT',k:'amit_durge',unop:true},
    ]},
 ];
 
