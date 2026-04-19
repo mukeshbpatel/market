@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Monthly Price Movement Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        select, input {
+            padding: 10px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 10px 25px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            align-self: flex-end;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 600;
+            padding: 40px;
+            display: none;
+        }
+
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: center;
+            font-size: 12px;
+            border: 1px solid #eee;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .year-col {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            min-width: 60px;
+            cursor: pointer;
+        }
+
+        .month-cell {
+            min-width: 70px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .month-cell:hover {
+            transform: scale(1.05);
+        }
+
+        .neutral {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        tr:hover td.month-cell {
+            opacity: 0.9;
+        }
+
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .legend h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .legend-items {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 12px;
+        }
+
+        .info {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-left: 4px solid #667eea;
+            border-radius: 4px;
+            color: #333;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .stock-info {
+            display: flex;
+            gap: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .info-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .positive {
+            color: #22bb33;
+        }
+
+        .negative {
+            color: #c41e3a;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            th, td {
+                padding: 8px 5px;
+                font-size: 11px;
+            }
+
+            .month-cell {
+                min-width: 50px;
+            }
+
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            button {
+                align-self: stretch;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Stock Monthly Price Movement Tracker</h1>
+        <p class="subtitle">Select a stock and a custom date range to display monthly percentage changes.</p>
+
+        <div class="controls">
+            <div class="control-group" style="flex: 1; min-width: 220px;">
+                <label for="stockSelect">Select Stock (NIFTY 100):</label>
+                <select id="stockSelect">
+                    <option value="">Loading stocks...</option>
+                </select>
+            </div>
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" min="2012-01-01" />
+            </div>
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" />
+            </div>
+            <div class="control-group" style="flex: 0 0 120px; align-self: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="fetchStockData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching data... This may take a moment.</div>
+
+        <div class="stock-info" id="stockInfo" style="display: none;">
+            <div class="info-item">
+                <div class="info-label">Current Price</div>
+                <div class="info-value" id="currentPrice">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Selected Range Change</div>
+                <div class="info-value" id="rangeChange">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Selected Range High</div>
+                <div class="info-value" id="rangeHigh">-</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Selected Range Low</div>
+                <div class="info-value" id="rangeLow">-</div>
+            </div>
+        </div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="monthlyTable">
+                <thead>
+                    <tr>
+                        <th>Year</th>
+                        <th>Jan</th>
+                        <th>Feb</th>
+                        <th>Mar</th>
+                        <th>Apr</th>
+                        <th>May</th>
+                        <th>Jun</th>
+                        <th>Jul</th>
+                        <th>Aug</th>
+                        <th>Sep</th>
+                        <th>Oct</th>
+                        <th>Nov</th>
+                        <th>Dec</th>
+                        <th>Yearly</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="chartContainer" style="display: none; margin-top: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h3 id="chartTitle">Candlestick Chart for Year</h3>
+            <canvas id="yearChart" style="width: 100%; height: 1000px;"></canvas>
+        </div>
+
+        <div class="legend" id="legendDiv" style="display: none;">
+            <h3>Color Legend</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color positive" style="background: #22bb33;">+25%</div>
+                    <span>Very Strong Gain</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color positive" style="background: #7fd87f;">+10%</div>
+                    <span>Strong Gain</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #e8f5e9; color: #22bb33; border: 1px solid #ccc;">+2%</div>
+                    <span>Mild Gain</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color neutral">0%</div>
+                    <span>Neutral</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffebee; color: #c41e3a; border: 1px solid #ccc;">-2%</div>
+                    <span>Mild Loss</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color negative" style="background: #e57373;">-10%</div>
+                    <span>Strong Loss</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color negative" style="background: #c41e3a;">-25%</div>
+                    <span>Very Strong Loss</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info" id="infoDiv" style="display: none;">
+            <strong>ℹ️ How to Read:</strong> Each cell shows the monthly percentage change in stock price.
+            <br>• <strong>Green</strong> = Positive return (bullish month)
+            <br>• <strong>Red</strong> = Negative return (bearish month)
+            <br>• The last column shows the full-year percentage change for that row
+            <br>• Color intensity increases with magnitude of change
+            <br>• Hover over cells to see exact percentage
+        </div>
+    </div>
+
+    <script>
+        // NIFTY 100 stocks
+        const NIFTY_100_STOCKS = [
+            'TCS', 'INFY', 'WIPRO', 'HCL', 'TECHM', 'LT', 'MARUTI', 'M&M', 'BAJAJ-AUTO',
+            'HEROMOTOCO', 'EICHER', 'APOLLOHOSP', 'KOTAKBANK', 'AXISBANK', 'HDFCBANK', 'ICICIBANK', 'SBIN',
+            'RELIANCE', 'JSWSTEEL', 'TATASTEEL', 'HINDALCO', 'VEDL', 'SHRIRAMFIN', 'HDFC', 'LIC',
+            'POWERGRID', 'NTPC', 'ADANIPORTS', 'ADANIENT', 'ITC', 'BRITANNIA', 'NESTLEIND', 'GODREJCP',
+            'PIDILITIND', 'COLPAL', 'MARICO', 'SUNPHARMA', 'CIPLA', 'DRREDDY', 'PHARMEASY', 'IPCALAB',
+            'BAJAJFINSV', 'SBILIFE', 'HDFCLIFE', 'ICICIPRULI', 'TITAN', 'ULTRACEMCO', 'GRASIM', 'AIRTELLORIG',
+            'BHARTIARTL', 'JIOFINANCE', 'YESBANK', 'DLF', 'SOBHA', 'PRESTIGE', 'SUNTV', 'PAGEIND',
+            'TATAMOTORS', 'BAJAJFINSV', 'NYKAA', 'NABIL', 'DLDMLTD', 'APOLLOTYRE', 'MRF', 'CUMMINSIND',
+            'BHEL', 'GAIL', 'IOC', 'BPCL', 'HPCL', 'COALINDIA', 'NMDC', 'TATACHEM',
+            'INDIGO', 'SPICEJET', 'MAHABANK', 'PNB', 'BANKBARODA', 'UNIONBANK', 'IRFC', 'HUDCO',
+            'SIEMENS', 'ABB', 'VOLTAS', 'WHIRLPOOL', 'HAVELLS', 'SYMPHONY', 'BOMDYEING', 'KALYANNVRTH'
+        ];
+
+        let currentStock = null;
+        let stockData = {};
+        let allCandles = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            populateStockDropdown();
+            setDefaultDateRange();
+        });
+
+        function setDefaultDateRange() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+            const startDate = new Date(2012, 0, 1);
+            const endDate = new Date();
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+            endDateInput.max = formatDate(endDate);
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function populateStockDropdown() {
+            const select = document.getElementById('stockSelect');
+            select.innerHTML = '<option value="">Select a stock...</option>';
+            NIFTY_100_STOCKS.forEach(stock => {
+                const option = document.createElement('option');
+                option.value = stock;
+                option.textContent = stock;
+                select.appendChild(option);
+            });
+        }
+
+        async function fetchStockData() {
+            const stock = document.getElementById('stockSelect').value;
+            if (!stock) {
+                showError('Please select a stock');
+                return;
+            }
+
+            const startDateInput = document.getElementById('startDate').value;
+            const endDateInput = document.getElementById('endDate').value;
+            if (!startDateInput || !endDateInput) {
+                showError('Please select both start and end dates');
+                return;
+            }
+
+            const startDate = new Date(startDateInput);
+            const endDate = new Date(endDateInput);
+            if (startDate > endDate) {
+                showError('Start date must be on or before end date');
+                return;
+            }
+
+            currentStock = stock;
+            showLoading(true);
+            showError('');
+
+            try {
+                const startTimeInMillis = startDate.getTime();
+                const endTimeInMillis = endDate.getTime();
+
+                // Use local backend proxy to bypass CORS restrictions
+                const proxyUrl = `/api/stock-data?stock=${stock}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
+
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                const data = await response.json();
+                
+                if (!data.candles || data.candles.length === 0) {
+                    throw new Error('No data available for this stock');
+                }
+
+                processAndDisplayData(data.candles);
+                showLoading(false);
+                document.getElementById('legendDiv').style.display = 'block';
+                document.getElementById('infoDiv').style.display = 'block';
+            } catch (error) {
+                showLoading(false);
+                showError(`Error fetching data: ${error.message}`);
+            }
+        }
+
+        function processAndDisplayData(candles) {
+            allCandles = candles; // Store globally for chart
+            candles.sort((a, b) => a[0] - b[0]);
+
+            // Group by month
+            const monthlyData = {};
+            candles.forEach(candle => {
+                // Convert timestamp to milliseconds if needed (Groww API returns seconds)
+                let timestamp = candle[0];
+                if (timestamp < 10000000000) {
+                    timestamp = timestamp * 1000; // Convert seconds to milliseconds
+                }
+                
+                const date = new Date(timestamp);
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const monthKey = `${year}-${month}`;
+
+                if (!monthlyData[monthKey]) {
+                    monthlyData[monthKey] = {
+                        year,
+                        month,
+                        open: candle[1],
+                        close: candle[4],
+                        high: candle[2],
+                        low: candle[3]
+                    };
+                } else {
+                    // Keep first open and last close
+                    monthlyData[monthKey].close = candle[4];
+                    monthlyData[monthKey].high = Math.max(monthlyData[monthKey].high, candle[2]);
+                    monthlyData[monthKey].low = Math.min(monthlyData[monthKey].low, candle[3]);
+                }
+            });
+
+            // Organize by year
+            const yearlyData = {};
+            Object.values(monthlyData).forEach(data => {
+                if (!yearlyData[data.year]) {
+                    yearlyData[data.year] = {};
+                }
+                yearlyData[data.year][data.month] = {
+                    open: data.open,
+                    close: data.close,
+                    high: data.high,
+                    low: data.low
+                };
+            });
+
+            // Calculate monthly changes
+            const monthlyChanges = {};
+            Object.entries(monthlyData).forEach(([key, data]) => {
+                const change = ((data.close - data.open) / data.open) * 100;
+                monthlyChanges[key] = change;
+            });
+
+            // Build table
+            buildTable(yearlyData, monthlyChanges, candles);
+
+            // Display stock info
+            displayStockInfo(candles, candles[0][1], candles[candles.length - 1][4]);
+        }
+
+        function buildTable(yearlyData, monthlyChanges, candles) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            const years = Object.keys(yearlyData).map(Number).sort((a, b) => a - b);
+
+            years.forEach(year => {
+                const row = document.createElement('tr');
+                const yearCell = document.createElement('td');
+                yearCell.className = 'year-col';
+                yearCell.textContent = year;
+                yearCell.onclick = () => showYearChart(year);
+                row.appendChild(yearCell);
+
+                for (let month = 0; month < 12; month++) {
+                    const cell = document.createElement('td');
+                    const monthKey = `${year}-${month}`;
+
+                    if (monthlyChanges[monthKey] !== undefined) {
+                        const change = monthlyChanges[monthKey];
+                        const monthData = yearlyData[year][month];
+
+                        cell.className = 'month-cell';
+                        cell.textContent = change.toFixed(1);
+                        cell.setAttribute('data-percent', `${change.toFixed(1)}%`);
+                        cell.setAttribute('title', `
+                            Open: ₹${monthData.open.toFixed(2)}
+                            Close: ₹${monthData.close.toFixed(2)}
+                            High: ₹${monthData.high.toFixed(2)}
+                            Low: ₹${monthData.low.toFixed(2)}
+                            Change: ${change.toFixed(2)}%`);
+
+                        // Color based on percentage change
+                        cell.style.backgroundColor = getColor(change);
+                        cell.style.color = getTextColor(change);
+                    } else {
+                        cell.className = 'month-cell neutral';
+                        cell.textContent = 'N/A';
+                        cell.style.backgroundColor = '#f0f0f0';
+                        cell.style.color = '#999';
+                    }
+
+                    row.appendChild(cell);
+                }
+
+                const yearlyCell = document.createElement('td');
+                const yearMonths = Object.keys(yearlyData[year]).map(Number).sort((a, b) => a - b);
+                if (yearMonths.length > 0) {
+                    const firstMonth = yearMonths[0];
+                    const lastMonth = yearMonths[yearMonths.length - 1];
+                    const startPrice = yearlyData[year][firstMonth].open;
+                    const endPrice = yearlyData[year][lastMonth].close;
+                    const yearlyChange = ((endPrice - startPrice) / startPrice) * 100;
+
+                    yearlyCell.className = 'month-cell';
+                    yearlyCell.textContent = yearlyChange.toFixed(1);
+                    yearlyCell.setAttribute('title', `Year start: ₹${startPrice.toFixed(2)}\nYear end: ₹${endPrice.toFixed(2)}\nChange: ${yearlyChange.toFixed(2)}%`);
+                    yearlyCell.style.backgroundColor = getColor(yearlyChange);
+                    yearlyCell.style.color = getTextColor(yearlyChange);
+                } else {
+                    yearlyCell.className = 'month-cell neutral';
+                    yearlyCell.textContent = 'N/A';
+                    yearlyCell.style.backgroundColor = '#f0f0f0';
+                    yearlyCell.style.color = '#999';
+                }
+                row.appendChild(yearlyCell);
+
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('tableWrapper').style.display = 'block';
+        }
+
+        function getColor(changePercent) {
+            const absChange = Math.abs(changePercent);
+            let hue, saturation, lightness;
+
+            if (changePercent > 0) {
+                // Green scale
+                hue = 120; // Green
+                saturation = Math.min(80, absChange * 3); // More intense with larger changes
+                lightness = 100 - (saturation * 0.3); // Lighter base, darker with intensity
+            } else if (changePercent < 0) {
+                // Red scale
+                hue = 0; // Red
+                saturation = Math.min(80, absChange * 3);
+                lightness = 100 - (saturation * 0.3);
+            } else {
+                // Neutral
+                return '#f0f0f0';
+            }
+
+            return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+        }
+
+        function getTextColor(changePercent) {
+            if (Math.abs(changePercent) > 15) {
+                return '#fff'; // White text for very dark backgrounds
+            }
+            return changePercent > 0 ? '#22bb33' : '#c41e3a';
+        }
+
+        function displayStockInfo(candles, startPrice, endPrice) {
+            const rangeChange = ((endPrice - startPrice) / startPrice) * 100;
+            const high = Math.max(...candles.map(c => c[2]));
+            const low = Math.min(...candles.map(c => c[3]));
+
+            document.getElementById('currentPrice').textContent = `₹${endPrice.toFixed(2)}`;
+            document.getElementById('rangeChange').innerHTML = `
+                <span class="${rangeChange > 0 ? 'positive' : 'negative'}">
+                    ${rangeChange > 0 ? '+' : ''}${rangeChange.toFixed(2)}%
+                </span>
+            `;
+            document.getElementById('rangeHigh').textContent = `₹${high.toFixed(2)}`;
+            document.getElementById('rangeLow').textContent = `₹${low.toFixed(2)}`;
+
+            document.getElementById('stockInfo').style.display = 'flex';
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMsg');
+            if (message) {
+                errorDiv.textContent = message;
+                errorDiv.style.display = 'block';
+            } else {
+                errorDiv.style.display = 'none';
+            }
+        }
+
+        function showYearChart(year) {
+            const yearCandles = allCandles.filter(candle => {
+                const timestamp = candle[0] < 10000000000 ? candle[0] * 1000 : candle[0];
+                const date = new Date(timestamp);
+                return date.getFullYear() === year;
+            });
+
+            if (yearCandles.length === 0) {
+                showError('No data available for this year');
+                return;
+            }
+
+            // Calculate EMA 20
+            const closes = yearCandles.map(c => c[4]);
+            const ema = calculateEMA(closes, 20);
+
+            // Prepare data
+            const candlestickData = yearCandles.map(c => {
+                const timestamp = c[0] < 10000000000 ? c[0] * 1000 : c[0];
+                return {
+                    x: timestamp,
+                    o: c[1],
+                    h: c[2],
+                    l: c[3],
+                    c: c[4]
+                };
+            });
+
+            const emaData = ema.map((val, i) => {
+                const timestamp = yearCandles[i][0] < 10000000000 ? yearCandles[i][0] * 1000 : yearCandles[i][0];
+                return { x: timestamp, y: val };
+            });
+
+            // Update chart title
+            document.getElementById('chartTitle').textContent = `Candlestick Chart for ${year} with EMA 20`;
+
+            // Reset canvas completely
+            const chartContainer = document.getElementById('chartContainer');
+            const oldCanvas = document.getElementById('yearChart');
+            if (oldCanvas) {
+                oldCanvas.remove();
+            }
+            
+            // Create new canvas
+            const canvas = document.createElement('canvas');
+            canvas.id = 'yearChart';
+            canvas.style.width = '100%';
+            // Remove fixed height style, let Chart.js handle it
+            
+            // Insert after title
+            const title = document.getElementById('chartTitle');
+            title.insertAdjacentElement('afterend', canvas);
+
+            // Destroy previous chart if exists
+            if (window.yearChartInstance) {
+                window.yearChartInstance.destroy();
+                window.yearChartInstance = null;
+            }
+
+            // Create chart
+            const ctx = canvas.getContext('2d');
+            window.yearChartInstance = new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: 'Candlestick',
+                        data: candlestickData,
+                        color: {
+                            up: '#22bb33',
+                            down: '#c41e3a',
+                            unchanged: '#999'
+                        }
+                    }, {
+                        label: 'EMA 20',
+                        type: 'line',
+                        data: emaData,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: false,
+                        pointRadius: 0,
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    width: chartContainer.offsetWidth,
+                    height: 1000,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                displayFormats: {
+                                    month: 'MMM yyyy'
+                                }
+                            },
+                            ticks: {
+                                maxTicksLimit: 12
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chartContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function calculateEMA(data, period) {
+            if (data.length < period) return data.map(() => null);
+            const ema = [];
+            const multiplier = 2 / (period + 1);
+            let emaVal = data.slice(0, period).reduce((sum, val) => sum + val, 0) / period; // Initial SMA
+            ema.push(emaVal);
+            for (let i = period; i < data.length; i++) {
+                emaVal = (data[i] - emaVal) * multiplier + emaVal;
+                ema.push(emaVal);
+            }
+            // Pad with nulls for the first period-1 values
+            while (ema.length < data.length) {
+                ema.unshift(null);
+            }
+            return ema;
+        }
+    </script>
+</body>
+</html>
