@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Weekly Price Movement Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+</head>
+<body>
+    <div id="siteMenu"></div>
+    <div class="container">
+        <h1>📈 Stock Weekly Price Movement Tracker</h1>
+        <p class="subtitle">Weekly percentage changes for all NIFTY 100 stocks across recent weeks.</p>
+
+        <div class="controls">
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" min="2018-01-01" />
+            </div>
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" />
+            </div>
+            <div class="control-group" style="flex: 0 0 120px; align-self: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="fetchAllStocksData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching data for all stocks... This may take a moment.</div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="weeklyTable">
+                <thead id="tableHead">
+                    <tr>
+                        <th>Stock</th>
+                        <!-- Week headers will be added dynamically -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="chartContainer" style="display: none; margin-top: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h3 id="chartTitle">Candlestick Chart for Week</h3>
+            <canvas id="weekChart" style="width: 100%; height: 1000px;"></canvas>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script>
+        // Weekly-specific variables and functions
+        let allStocksWeeklyData = {};
+        let allWeeks = [];
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            setDefaultDateRange();
+            fetchAllStocksData(); // Auto-load last 20 weeks data
+        });
+
+        function setDefaultDateRange() {
+            const startDateInput = document.getElementById('startDate');
+            const endDateInput = document.getElementById('endDate');
+
+            // Calculate date 26 weeks ago for the weekly chart range
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - (26 * 7)); // 26 weeks * 7 days
+
+            startDateInput.value = formatDate(startDate);
+            endDateInput.value = formatDate(endDate);
+            endDateInput.max = formatDate(endDate);
+        }
+
+        function formatDate(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        async function fetchAllStocksData() {
+            const startDateInput = document.getElementById('startDate').value;
+            const endDateInput = document.getElementById('endDate').value;
+            if (!startDateInput || !endDateInput) {
+                showError('Please select both start and end dates');
+                return;
+            }
+
+            const startDate = new Date(startDateInput);
+            const endDate = new Date(endDateInput);
+            if (startDate > endDate) {
+                showError('Start date must be on or before end date');
+                return;
+            }
+
+            showLoading(true);
+            showError('');
+            allStocksWeeklyData = {};
+            allWeeks = [];
+
+            try {
+                // Fetch data for all stocks
+                const fetchPromises = NIFTY_100_STOCKS.map(async (stock) => {
+                    try {
+                        const startTimeInMillis = startDate.getTime();
+                        const endTimeInMillis = endDate.getTime();
+
+                        const proxyUrl = `/api/stock-data?stock=${stock}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
+                        const response = await fetch(proxyUrl);
+                        if (!response.ok) throw new Error(`API Error: ${response.status}`);
+
+                        const data = await response.json();
+                        if (data.candles && data.candles.length > 0) {
+                            return { stock, candles: data.candles };
+                        }
+                        return null;
+                    } catch (error) {
+                        console.warn(`Failed to fetch data for ${stock}:`, error);
+                        return null;
+                    }
+                });
+
+                const results = await Promise.all(fetchPromises);
+                const validResults = results.filter(result => result !== null);
+
+                // Process all stock data
+                processAllStocksData(validResults);
+                showLoading(false);
+            } catch (error) {
+                showLoading(false);
+                showError(`Error fetching data: ${error.message}`);
+            }
+        }
+
+        function processAllStocksData(stockResults) {
+            // Generate consecutive 16-week range starting from the most recent week
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - (26 * 7)); // 26 weeks ago
+
+            // Generate all weeks in the range
+            allWeeks = [];
+            const currentWeek = new Date(startDate);
+            currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1); // Start from Monday
+
+            while (currentWeek <= endDate) {
+                // Create week key as YYYY-MM-DD format for Monday of the week
+                const year = currentWeek.getFullYear();
+                const month = String(currentWeek.getMonth() + 1).padStart(2, '0');
+                const day = String(currentWeek.getDate()).padStart(2, '0');
+                const weekKey = `${year}-${month}-${day}`;
+                allWeeks.push(weekKey);
+                currentWeek.setDate(currentWeek.getDate() + 7); // Next week
+            }
+
+            // Process each stock's data
+            stockResults.forEach(({ stock, candles }) => {
+                const weeklyDataMap = {};
+
+                // Group candles by week
+                candles.forEach(candle => {
+                    let timestamp = candle[0];
+                    if (timestamp < 10000000000) {
+                        timestamp = timestamp * 1000;
+                    }
+                    const date = new Date(timestamp);
+                    const weekStart = new Date(date);
+                    weekStart.setDate(date.getDate() - date.getDay() + 1);
+                    // Create week key as YYYY-MM-DD format for Monday of the week
+                    const year = weekStart.getFullYear();
+                    const month = String(weekStart.getMonth() + 1).padStart(2, '0');
+                    const day = String(weekStart.getDate()).padStart(2, '0');
+                    const weekKey = `${year}-${month}-${day}`;
+
+                    if (!weeklyDataMap[weekKey]) {
+                        weeklyDataMap[weekKey] = {
+                            open: candle[1],
+                            close: candle[4],
+                            high: candle[2],
+                            low: candle[3],
+                            volume: candle[5] || 0,
+                            candles: []
+                        };
+                    } else {
+                        weeklyDataMap[weekKey].close = candle[4];
+                        weeklyDataMap[weekKey].high = Math.max(weeklyDataMap[weekKey].high, candle[2]);
+                        weeklyDataMap[weekKey].low = Math.min(weeklyDataMap[weekKey].low, candle[3]);
+                        weeklyDataMap[weekKey].volume += candle[5] || 0;
+                    }
+                    weeklyDataMap[weekKey].candles.push(candle);
+                });
+
+                // Calculate price changes for this stock
+                const stockWeeklyChanges = {};
+                allWeeks.forEach(weekKey => {
+                    if (weeklyDataMap[weekKey]) {
+                        const data = weeklyDataMap[weekKey];
+                        const priceChange = ((data.close - data.open) / data.open) * 100;
+                        stockWeeklyChanges[weekKey] = {
+                            priceChange,
+                            data
+                        };
+                    }
+                });
+
+                allStocksWeeklyData[stock] = stockWeeklyChanges;
+            });
+
+            // Build the grid table
+            buildWeeklyGridTable();
+        }
+
+        function buildWeeklyGridTable() {
+            const thead = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+
+            // Clear existing content
+            thead.innerHTML = '';
+            tbody.innerHTML = '';
+
+            // Build header row with weeks
+            const headerRow = document.createElement('tr');
+            const stockHeader = document.createElement('th');
+            stockHeader.textContent = 'Stock';
+            stockHeader.className = 'stock-col';
+            headerRow.appendChild(stockHeader);
+
+            // Show weeks in the selected recent range
+            allWeeks.forEach(weekKey => {
+                const weekHeader = document.createElement('th');
+                // Format week key (YYYY-MM-DD) to show week range
+                const monday = new Date(weekKey);
+                const sunday = new Date(monday);
+                sunday.setDate(monday.getDate() + 6);
+                const monMonth = monday.toLocaleString('default', { month: 'short' });
+                const monDay = monday.getDate();
+                const sunMonth = sunday.toLocaleString('default', { month: 'short' });
+                const sunDay = sunday.getDate();
+                weekHeader.textContent = `${monMonth} ${monDay}-${sunDay}`;
+                weekHeader.className = 'week-header';
+                headerRow.appendChild(weekHeader);
+            });
+            thead.appendChild(headerRow);
+
+            // Sort stocks by market cap
+            const sortedStocks = Object.keys(allStocksWeeklyData).sort((a, b) => {
+                const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
+                const rankB = MARKET_CAP_RANK[b] ?? Number.MAX_SAFE_INTEGER;
+                return rankA - rankB || a.localeCompare(b);
+            });
+
+            // Build rows for each stock
+            sortedStocks.forEach(stock => {
+                const row = document.createElement('tr');
+                const stockCell = document.createElement('td');
+                stockCell.className = 'stock-col';
+                stockCell.textContent = stock;
+                stockCell.style.cursor = 'pointer';
+                stockCell.title = 'Click to show last 26-week chart with EMA 20';
+                stockCell.onclick = () => showStock26WeekChart(stock);
+                row.appendChild(stockCell);
+
+                allWeeks.forEach(weekKey => {
+                    const cell = document.createElement('td');
+                    cell.className = 'month-cell';
+
+                    const weekData = allStocksWeeklyData[stock][weekKey];
+                    if (weekData) {
+                        const change = weekData.priceChange;
+                        cell.textContent = change.toFixed(1);
+                        // Format week key for readable tooltip
+                        const monday = new Date(weekKey);
+                        const sunday = new Date(monday);
+                        sunday.setDate(monday.getDate() + 6);
+                        const monMonth = monday.toLocaleString('default', { month: 'short' });
+                        const monDay = monday.getDate();
+                        const sunMonth = sunday.toLocaleString('default', { month: 'short' });
+                        const sunDay = sunday.getDate();
+                        cell.setAttribute('title', `${stock} - Week of ${monMonth} ${monDay}-${sunDay}: ${change.toFixed(2)}%`);
+                        cell.style.backgroundColor = getColor(change);
+                        cell.style.color = getTextColor(change);
+                        cell.onclick = () => showStockWeekChart(stock, weekKey, weekData.data.candles);
+                    } else {
+                        cell.className = 'month-cell neutral';
+                        cell.textContent = 'N/A';
+                        cell.style.backgroundColor = '#f0f0f0';
+                        cell.style.color = '#999';
+                    }
+
+                    row.appendChild(cell);
+                });
+
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('tableWrapper').style.display = 'block';
+        }
+
+        function calculateEMA(values, period) {
+            if (!values || values.length === 0) return [];
+            const k = 2 / (period + 1);
+            const ema = [];
+            values.forEach((value, index) => {
+                if (index === 0) {
+                    ema.push(value);
+                } else {
+                    ema.push(value * k + ema[index - 1] * (1 - k));
+                }
+            });
+            return ema;
+        }
+
+        function showStock26WeekChart(stock) {
+            const stockData = allStocksWeeklyData[stock];
+            if (!stockData) {
+                showError('No weekly data available for ' + stock);
+                return;
+            }
+
+            const stockWeeks = Object.keys(stockData)
+                .filter(key => stockData[key] && stockData[key].data)
+                .sort((a, b) => new Date(a) - new Date(b));
+
+            const recentWeeks = stockWeeks.slice(-26);
+            if (recentWeeks.length === 0) {
+                showError('No weekly data available for ' + stock);
+                return;
+            }
+
+            const candleData = recentWeeks.map(weekKey => {
+                const week = stockData[weekKey].data;
+                const timestamp = new Date(weekKey).getTime();
+                return {
+                    x: timestamp,
+                    o: week.open,
+                    h: week.high,
+                    l: week.low,
+                    c: week.close
+                };
+            });
+
+            const closes = candleData.map(point => point.c);
+            const ema20Values = calculateEMA(closes, 20);
+            const ema20Data = candleData.map((point, index) => ({ x: point.x, y: ema20Values[index] }));
+
+            const monday = new Date(recentWeeks[0]);
+            const sunday = new Date(recentWeeks[recentWeeks.length - 1]);
+            const monMonth = monday.toLocaleString('default', { month: 'short' });
+            const monDay = monday.getDate();
+            const sunMonth = sunday.toLocaleString('default', { month: 'short' });
+            const sunDay = sunday.getDate();
+            document.getElementById('chartTitle').textContent = `${stock} - Last ${recentWeeks.length} Weeks with EMA 20`;
+
+            const chartContainer = document.getElementById('chartContainer');
+            const oldCanvas = document.getElementById('weekChart');
+            if (oldCanvas) {
+                oldCanvas.remove();
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.id = 'weekChart';
+            canvas.style.width = '100%';
+            const title = document.getElementById('chartTitle');
+            title.insertAdjacentElement('afterend', canvas);
+
+            if (window.weekChartInstance) {
+                window.weekChartInstance.destroy();
+                window.weekChartInstance = null;
+            }
+
+            const ctx = canvas.getContext('2d');
+            window.weekChartInstance = new Chart(ctx, {
+                data: {
+                    datasets: [
+                        {
+                            label: 'Weekly Candles',
+                            type: 'candlestick',
+                            data: candleData,
+                            color: {
+                                up: '#22bb33',
+                                down: '#c41e3a',
+                                unchanged: '#999'
+                            }
+                        },
+                        {
+                            label: 'EMA 20',
+                            type: 'line',
+                            data: ema20Data,
+                            borderColor: '#ff9800',
+                            backgroundColor: 'rgba(255, 152, 0, 0.15)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.2,
+                            yAxisID: 'y'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    width: chartContainer.offsetWidth,
+                    height: 600,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'week',
+                                tooltipFormat: 'MMM dd'
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chartContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showStockWeekChart(stock, weekKey, weekCandles) {
+            if (!weekCandles || weekCandles.length === 0) {
+                showError('No data available for this stock and week');
+                return;
+            }
+
+            // Prepare candlestick data
+            const candlestickData = weekCandles.map(c => {
+                const timestamp = c[0] < 10000000000 ? c[0] * 1000 : c[0];
+                return {
+                    x: timestamp,
+                    o: c[1],
+                    h: c[2],
+                    l: c[3],
+                    c: c[4]
+                };
+            });
+
+            // Update chart title
+            const monday = new Date(weekKey);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            const monMonth = monday.toLocaleString('default', { month: 'short' });
+            const monDay = monday.getDate();
+            const sunDay = sunday.getDate();
+            document.getElementById('chartTitle').textContent = `Candlestick Chart for ${stock} - Week of ${monMonth} ${monDay}-${sunDay}`;
+
+            // Reset canvas completely
+            const chartContainer = document.getElementById('chartContainer');
+            const oldCanvas = document.getElementById('weekChart');
+            if (oldCanvas) {
+                oldCanvas.remove();
+            }
+
+            // Create new canvas
+            const canvas = document.createElement('canvas');
+            canvas.id = 'weekChart';
+            canvas.style.width = '100%';
+
+            // Insert after title
+            const title = document.getElementById('chartTitle');
+            title.insertAdjacentElement('afterend', canvas);
+
+            // Destroy previous chart if exists
+            if (window.weekChartInstance) {
+                window.weekChartInstance.destroy();
+                window.weekChartInstance = null;
+            }
+
+            // Create chart
+            const ctx = canvas.getContext('2d');
+            window.weekChartInstance = new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: 'Candlestick',
+                        data: candlestickData,
+                        color: {
+                            up: '#22bb33',
+                            down: '#c41e3a',
+                            unchanged: '#999'
+                        }
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    width: chartContainer.offsetWidth,
+                    height: 600,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MMM dd'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chartContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

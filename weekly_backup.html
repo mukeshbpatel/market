@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Weekly Price Movement Tracker</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial"></script>
+</head>
+<body>
+    <div id="siteMenu"></div>
+    <div class="container">
+        <h1>📈 Stock Weekly Price Movement Tracker</h1>
+        <p class="subtitle">Weekly percentage changes for all NIFTY 100 stocks across recent weeks.</p>
+
+        <div class="controls">
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" min="2018-01-01" />
+            </div>
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" />
+            </div>
+            <div class="control-group" style="flex: 0 0 120px; align-self: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="fetchAllStocksData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching data for all stocks... This may take a moment.</div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="weeklyTable">
+                <thead id="tableHead">
+                    <tr>
+                        <th>Stock</th>
+                        <!-- Week headers will be added dynamically -->
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div id="chartContainer" style="display: none; margin-top: 30px; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+            <h3 id="chartTitle">Candlestick Chart for Week</h3>
+            <canvas id="weekChart" style="width: 100%; height: 1000px;"></canvas>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script>
+        // Weekly-specific variables and functions
+        let weeklyData = [];
+
+        // Override the processAndDisplayData function for weekly logic
+        function processAndDisplayData(candles) {
+            allCandles = candles; // Store globally for chart
+            candles.sort((a, b) => a[0] - b[0]);
+
+            // Group by week
+            const weeklyDataMap = {};
+            candles.forEach(candle => {
+                let timestamp = candle[0];
+                if (timestamp < 10000000000) {
+                    timestamp = timestamp * 1000;
+                }
+                
+                const date = new Date(timestamp);
+                const year = date.getFullYear();
+                const month = date.getMonth();
+                const day = date.getDate();
+                
+                // Calculate week number (ISO week)
+                const weekStart = new Date(date);
+                weekStart.setDate(date.getDate() - date.getDay() + 1); // Monday of the week
+                const weekKey = `${weekStart.getFullYear()}-W${Math.ceil((weekStart.getDate() - weekStart.getDay() + 1) / 7)}`;
+
+                if (!weeklyDataMap[weekKey]) {
+                    weeklyDataMap[weekKey] = {
+                        weekStart: weekStart,
+                        open: candle[1],
+                        close: candle[4],
+                        high: candle[2],
+                        low: candle[3],
+                        volume: candle[5] || 0,
+                        candles: []
+                    };
+                } else {
+                    weeklyDataMap[weekKey].close = candle[4];
+                    weeklyDataMap[weekKey].high = Math.max(weeklyDataMap[weekKey].high, candle[2]);
+                    weeklyDataMap[weekKey].low = Math.min(weeklyDataMap[weekKey].low, candle[3]);
+                    weeklyDataMap[weekKey].volume += candle[5] || 0;
+                }
+                weeklyDataMap[weekKey].candles.push(candle);
+            });
+
+            // Calculate weekly changes and volume changes
+            weeklyData = Object.entries(weeklyDataMap).map(([weekKey, data]) => {
+                const priceChange = ((data.close - data.open) / data.open) * 100;
+                
+                // Calculate volume change compared to previous week
+                const weeks = Object.keys(weeklyDataMap).sort();
+                const currentIndex = weeks.indexOf(weekKey);
+                let volumeChange = 0;
+                if (currentIndex > 0) {
+                    const prevWeek = weeklyDataMap[weeks[currentIndex - 1]];
+                    if (prevWeek.volume > 0) {
+                        volumeChange = ((data.volume - prevWeek.volume) / prevWeek.volume) * 100;
+                    }
+                }
+
+                return {
+                    week: weekKey,
+                    priceChange,
+                    volumeChange,
+                    data
+                };
+            });
+
+            // Build table
+            buildWeeklyTable(weeklyData);
+
+            // Display stock info
+            displayStockInfo(candles, candles[0][1], candles[candles.length - 1][4]);
+        }
+
+        function buildWeeklyTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            // Show last 20 weeks
+            const recentData = data.slice(-20);
+
+            recentData.forEach(item => {
+                const row = document.createElement('tr');
+                
+                // Week column
+                const weekCell = document.createElement('td');
+                weekCell.className = 'week-col';
+                weekCell.textContent = item.week;
+                weekCell.onclick = () => showWeekChart(item.week, item.data.candles);
+                row.appendChild(weekCell);
+
+                // Price change column
+                const priceCell = document.createElement('td');
+                priceCell.className = 'month-cell';
+                priceCell.textContent = item.priceChange.toFixed(1);
+                priceCell.setAttribute('title', `Price change: ${item.priceChange.toFixed(2)}%`);
+                priceCell.style.backgroundColor = getColor(item.priceChange);
+                priceCell.style.color = getTextColor(item.priceChange);
+                row.appendChild(priceCell);
+
+                // Volume change column
+                const volumeCell = document.createElement('td');
+                volumeCell.className = 'month-cell';
+                volumeCell.textContent = item.volumeChange.toFixed(1);
+                volumeCell.setAttribute('title', `Volume change: ${item.volumeChange.toFixed(2)}%`);
+                // Color volume changes: green for increase, red for decrease
+                if (item.volumeChange > 0) {
+                    volumeCell.style.backgroundColor = '#d4f8d4';
+                    volumeCell.style.color = '#333';
+                } else if (item.volumeChange < 0) {
+                    volumeCell.style.backgroundColor = '#fde2e2';
+                    volumeCell.style.color = '#333';
+                } else {
+                    volumeCell.style.backgroundColor = '#f0f0f0';
+                    volumeCell.style.color = '#999';
+                }
+                row.appendChild(volumeCell);
+
+                tbody.appendChild(row);
+            });
+
+            document.getElementById('tableWrapper').style.display = 'block';
+        }
+
+        function showWeekChart(weekKey, weekCandles) {
+            if (!weekCandles || weekCandles.length === 0) {
+                showError('No data available for this week');
+                return;
+            }
+
+            // Prepare candlestick data
+            const candlestickData = weekCandles.map(c => {
+                const timestamp = c[0] < 10000000000 ? c[0] * 1000 : c[0];
+                return {
+                    x: timestamp,
+                    o: c[1],
+                    h: c[2],
+                    l: c[3],
+                    c: c[4]
+                };
+            });
+
+            // Update chart title
+            document.getElementById('chartTitle').textContent = `Candlestick Chart for ${weekKey}`;
+
+            // Reset canvas completely
+            const chartContainer = document.getElementById('chartContainer');
+            const oldCanvas = document.getElementById('weekChart');
+            if (oldCanvas) {
+                oldCanvas.remove();
+            }
+            
+            // Create new canvas
+            const canvas = document.createElement('canvas');
+            canvas.id = 'weekChart';
+            canvas.style.width = '100%';
+            
+            // Insert after title
+            const title = document.getElementById('chartTitle');
+            title.insertAdjacentElement('afterend', canvas);
+
+            // Destroy previous chart if exists
+            if (window.weekChartInstance) {
+                window.weekChartInstance.destroy();
+                window.weekChartInstance = null;
+            }
+
+            // Create chart
+            const ctx = canvas.getContext('2d');
+            window.weekChartInstance = new Chart(ctx, {
+                type: 'candlestick',
+                data: {
+                    datasets: [{
+                        label: 'Candlestick',
+                        data: candlestickData,
+                        color: {
+                            up: '#22bb33',
+                            down: '#c41e3a',
+                            unchanged: '#999'
+                        }
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    width: chartContainer.offsetWidth,
+                    height: 600,
+                    animation: false,
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MMM dd'
+                                }
+                            }
+                        },
+                        y: {
+                            beginAtZero: false
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    }
+                }
+            });
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chartContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

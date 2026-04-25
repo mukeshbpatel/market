@@ -41,5 +41,5 @@ app.get('/api/stock-data', async (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`\n✅ Server running at http://localhost:${PORT}`);
-    console.log(`\n📊 Open: http://localhost:${PORT}/stock-monthly-tracker.html\n`);
+    console.log(`\n📊 Open: http://localhost:${PORT}/index.html\n`);
 });
