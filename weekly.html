@@ -232,8 +232,10 @@
             stockHeader.className = 'stock-col';
             headerRow.appendChild(stockHeader);
 
-            // Show weeks in the selected recent range
-            allWeeks.forEach(weekKey => {
+            // Show only the most recent 10 weeks in the grid,
+            // while the graph still uses the full 26-week dataset.
+            const visibleWeeks = allWeeks.slice(-10);
+            visibleWeeks.forEach(weekKey => {
                 const weekHeader = document.createElement('th');
                 // Format week key (YYYY-MM-DD) to show week range
                 const monday = new Date(weekKey);
@@ -267,7 +269,7 @@
                 stockCell.onclick = () => showStock26WeekChart(stock);
                 row.appendChild(stockCell);
 
-                allWeeks.forEach(weekKey => {
+                visibleWeeks.forEach(weekKey => {
                     const cell = document.createElement('td');
                     cell.className = 'month-cell';
 
@@ -324,34 +326,40 @@
                 return;
             }
 
-            const stockWeeks = Object.keys(stockData)
-                .filter(key => stockData[key] && stockData[key].data)
-                .sort((a, b) => new Date(a) - new Date(b));
-
-            const recentWeeks = stockWeeks.slice(-26);
+            const recentWeeks = allWeeks.slice(-26);
             if (recentWeeks.length === 0) {
-                showError('No weekly data available for ' + stock);
+                showError('No weekly range available for ' + stock);
                 return;
             }
 
             const candleData = recentWeeks.map(weekKey => {
-                const week = stockData[weekKey].data;
+                const week = stockData[weekKey];
+                if (!week || !week.data) {
+                    return null;
+                }
                 const timestamp = new Date(weekKey).getTime();
                 return {
                     x: timestamp,
-                    o: week.open,
-                    h: week.high,
-                    l: week.low,
-                    c: week.close
+                    o: week.data.open,
+                    h: week.data.high,
+                    l: week.data.low,
+                    c: week.data.close
                 };
-            });
+            }).filter(point => point !== null);
+
+            if (candleData.length === 0) {
+                showError('No weekly candle data available for ' + stock);
+                return;
+            }
 
             const closes = candleData.map(point => point.c);
             const ema20Values = calculateEMA(closes, 20);
             const ema20Data = candleData.map((point, index) => ({ x: point.x, y: ema20Values[index] }));
 
-            const monday = new Date(recentWeeks[0]);
-            const sunday = new Date(recentWeeks[recentWeeks.length - 1]);
+            const rangeStart = new Date(recentWeeks[0]).getTime();
+            const rangeEnd = new Date(recentWeeks[recentWeeks.length - 1]).getTime();
+            const monday = new Date(rangeStart);
+            const sunday = new Date(rangeEnd);
             const monMonth = monday.toLocaleString('default', { month: 'short' });
             const monDay = monday.getDate();
             const sunMonth = sunday.toLocaleString('default', { month: 'short' });
@@ -408,12 +416,14 @@
                     height: 600,
                     animation: false,
                     scales: {
-                        x: {
+                                x: {
                             type: 'time',
                             time: {
                                 unit: 'week',
                                 tooltipFormat: 'MMM dd'
-                            }
+                            },
+                            min: rangeStart,
+                            max: rangeEnd
                         },
                         y: {
                             beginAtZero: false
