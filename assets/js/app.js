@@ -473,3 +473,13 @@ function calculateEMA(data, period) {
     }
     return ema;
 }
+
+function openSensibullChart(symbol) {
+    if (!symbol) {
+        showError('Please select a stock');
+        return;
+    }
+
+    const url = `https://web.sensibull.com/chart?tradingSymbol=${encodeURIComponent(symbol)}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+}
