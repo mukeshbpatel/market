@@ -1,9 +1,34 @@
 const TECH_RSI_PERIOD = 14;
+let technicalRows = [];
+let technicalSortState = {
+    column: 'marketCap',
+    direction: 'asc'
+};
 
 document.addEventListener('DOMContentLoaded', () => {
+    setupTechnicalSortHandlers();
     setDefaultDateRange();
     fetchTechnicalData();
 });
+
+function setupTechnicalSortHandlers() {
+    const headers = document.querySelectorAll('#technicalTable th[data-sort-key]');
+    headers.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.title = 'Click to sort';
+        header.addEventListener('click', () => {
+            const sortKey = header.dataset.sortKey;
+            if (technicalSortState.column === sortKey) {
+                technicalSortState.direction = technicalSortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                technicalSortState.column = sortKey;
+                technicalSortState.direction = 'asc';
+            }
+
+            renderTechnicalTable();
+        });
+    });
+}
 
 function setDefaultDateRange() {
     const startDateInput = document.getElementById('startDate');
@@ -73,8 +98,8 @@ async function fetchTechnicalData() {
             }
         }));
 
-        const rows = results.filter(Boolean);
-        buildTechnicalTable(rows);
+        technicalRows = results.filter(Boolean);
+        buildTechnicalTable();
         showLoading(false);
     } catch (error) {
         showLoading(false);
@@ -240,9 +265,17 @@ function getLatestEMA(values, period) {
     return null;
 }
 
-function buildTechnicalTable(rows) {
+function buildTechnicalTable() {
+    renderTechnicalTable();
+}
+
+function renderTechnicalTable() {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
+
+    updateTechnicalSortIndicators();
+
+    const rows = getSortedTechnicalRows();
 
     rows.forEach(rowData => {
         const row = document.createElement('tr');
@@ -266,6 +299,62 @@ function buildTechnicalTable(rows) {
     });
 
     document.getElementById('tableWrapper').style.display = 'block';
+}
+
+function getSortedTechnicalRows() {
+    const rows = technicalRows.slice();
+    const sortKey = technicalSortState.column;
+    const direction = technicalSortState.direction === 'desc' ? -1 : 1;
+
+    if (sortKey === 'marketCap') {
+        return rows;
+    }
+
+    return rows.sort((a, b) => compareTechnicalRows(a, b, sortKey, direction));
+}
+
+function compareTechnicalRows(a, b, sortKey, direction) {
+    if (sortKey === 'stock') {
+        return direction * a.stock.localeCompare(b.stock);
+    }
+
+    const valueA = a[sortKey];
+    const valueB = b[sortKey];
+
+    if (valueA === null && valueB === null) {
+        return a.stock.localeCompare(b.stock);
+    }
+
+    if (valueA === null) {
+        return 1;
+    }
+
+    if (valueB === null) {
+        return -1;
+    }
+
+    const delta = valueA - valueB;
+    if (delta === 0) {
+        return a.stock.localeCompare(b.stock);
+    }
+
+    return direction * delta;
+}
+
+function updateTechnicalSortIndicators() {
+    const headers = document.querySelectorAll('#technicalTable th[data-sort-key]');
+    headers.forEach(header => {
+        const indicator = header.querySelector('.sort-indicator');
+        if (!indicator) {
+            return;
+        }
+
+        if (header.dataset.sortKey === technicalSortState.column && technicalSortState.column !== 'marketCap') {
+            indicator.textContent = technicalSortState.direction === 'asc' ? '▲' : '▼';
+        } else {
+            indicator.textContent = '';
+        }
+    });
 }
 
 function createRsiCell(value) {

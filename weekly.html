@@ -49,6 +49,10 @@
         // Weekly-specific variables and functions
         let allStocksWeeklyData = {};
         let allWeeks = [];
+        let weeklySortState = {
+            column: 'marketCap',
+            direction: 'asc'
+        };
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -219,16 +223,13 @@
 
             // Build header row with weeks
             const headerRow = document.createElement('tr');
-            const stockHeader = document.createElement('th');
-            stockHeader.textContent = 'Stock';
-            stockHeader.className = 'stock-col';
-            headerRow.appendChild(stockHeader);
+            headerRow.appendChild(createWeeklySortableHeader('Stock', 'stock', 'stock-col'));
 
             // Show only the most recent 10 weeks in the grid,
             // while the graph still uses the full 26-week dataset.
             const visibleWeeks = allWeeks.slice(-10);
             visibleWeeks.forEach(weekKey => {
-                const weekHeader = document.createElement('th');
+                const weekHeader = createWeeklySortableHeader('', weekKey, 'week-header');
                 // Format week key (YYYY-MM-DD) to show week range
                 const monday = new Date(weekKey);
                 const sunday = new Date(monday);
@@ -237,18 +238,13 @@
                 const monDay = monday.getDate();
                 const sunMonth = sunday.toLocaleString('default', { month: 'short' });
                 const sunDay = sunday.getDate();
-                weekHeader.textContent = `${monMonth} ${monDay}-${sunDay}`;
-                weekHeader.className = 'week-header';
+                weekHeader.querySelector('.header-label').textContent = `${monMonth} ${monDay}-${sunDay}`;
                 headerRow.appendChild(weekHeader);
             });
             thead.appendChild(headerRow);
 
             // Sort stocks by market cap
-            const sortedStocks = Object.keys(allStocksWeeklyData).sort((a, b) => {
-                const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
-                const rankB = MARKET_CAP_RANK[b] ?? Number.MAX_SAFE_INTEGER;
-                return rankA - rankB || a.localeCompare(b);
-            });
+            const sortedStocks = getSortedWeeklyStocks(visibleWeeks);
 
             // Build rows for each stock
             sortedStocks.forEach(stock => {
@@ -294,6 +290,93 @@
             });
 
             document.getElementById('tableWrapper').style.display = 'block';
+        }
+
+        function createWeeklySortableHeader(label, sortKey, className) {
+            const header = document.createElement('th');
+            header.className = `${className} sortable-header`;
+            header.dataset.sortKey = sortKey;
+            header.innerHTML = '<span class="header-label"></span><span class="sort-indicator"></span>';
+            header.querySelector('.header-label').textContent = label;
+            header.title = 'Click to sort';
+            header.style.cursor = 'pointer';
+            header.addEventListener('click', () => handleWeeklySort(sortKey));
+            updateWeeklyHeaderIndicator(header, sortKey);
+            return header;
+        }
+
+        function handleWeeklySort(sortKey) {
+            if (weeklySortState.column === sortKey) {
+                weeklySortState.direction = weeklySortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                weeklySortState.column = sortKey;
+                weeklySortState.direction = 'asc';
+            }
+
+            buildWeeklyGridTable();
+        }
+
+        function getSortedWeeklyStocks(visibleWeeks) {
+            const stocks = Object.keys(allStocksWeeklyData);
+
+            if (weeklySortState.column === 'marketCap') {
+                return stocks.sort((a, b) => {
+                    const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
+                    const rankB = MARKET_CAP_RANK[b] ?? Number.MAX_SAFE_INTEGER;
+                    return rankA - rankB || a.localeCompare(b);
+                });
+            }
+
+            if (weeklySortState.column === 'stock') {
+                const direction = weeklySortState.direction === 'desc' ? -1 : 1;
+                return stocks.sort((a, b) => direction * a.localeCompare(b));
+            }
+
+            if (!visibleWeeks.includes(weeklySortState.column)) {
+                return stocks.sort((a, b) => {
+                    const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
+                    const rankB = MARKET_CAP_RANK[b] ?? Number.MAX_SAFE_INTEGER;
+                    return rankA - rankB || a.localeCompare(b);
+                });
+            }
+
+            const direction = weeklySortState.direction === 'desc' ? -1 : 1;
+            return stocks.sort((a, b) => {
+                const valueA = allStocksWeeklyData[a][weeklySortState.column]?.priceChange ?? null;
+                const valueB = allStocksWeeklyData[b][weeklySortState.column]?.priceChange ?? null;
+
+                if (valueA === null && valueB === null) {
+                    return a.localeCompare(b);
+                }
+
+                if (valueA === null) {
+                    return 1;
+                }
+
+                if (valueB === null) {
+                    return -1;
+                }
+
+                const delta = valueA - valueB;
+                if (delta === 0) {
+                    return a.localeCompare(b);
+                }
+
+                return direction * delta;
+            });
+        }
+
+        function updateWeeklyHeaderIndicator(header, sortKey) {
+            const indicator = header.querySelector('.sort-indicator');
+            if (!indicator) {
+                return;
+            }
+
+            if (weeklySortState.column === sortKey && sortKey !== 'marketCap') {
+                indicator.textContent = weeklySortState.direction === 'asc' ? '▲' : '▼';
+            } else {
+                indicator.textContent = '';
+            }
         }
 
     </script>
