@@ -13,6 +13,7 @@ async function loadSiteMenu() {
             <nav class="nav-menu">
                 <a href="index.html">Monthly Tracker</a>
                 <a href="weekly.html">Weekly Tracker</a>
+                <a href="technical.html">Technical Analysis</a>
                 <a href="stock-tracker.html">Stock Tracker</a>
                 <a href="weekly-movement.html">Weekly Movement</a>
             </nav>

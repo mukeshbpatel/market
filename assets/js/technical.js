@@ -104,6 +104,7 @@ function buildTechnicalRow(stock, candles) {
 
     return {
         stock,
+        dailyCandles,
         monthlyRSI,
         weeklyRSI,
         dailyRSI,
@@ -250,6 +251,8 @@ function buildTechnicalTable(rows) {
         const stockCell = document.createElement('td');
         stockCell.className = 'year-col';
         stockCell.textContent = rowData.stock;
+        stockCell.title = 'Click to view daily chart';
+        stockCell.onclick = () => showDailyChart(rowData.stock, rowData.dailyCandles);
         row.appendChild(stockCell);
 
         row.appendChild(createRsiCell(rowData.monthlyRSI));
@@ -264,6 +267,119 @@ function buildTechnicalTable(rows) {
     });
 
     document.getElementById('tableWrapper').style.display = 'block';
+}
+
+function showDailyChart(stock, dailyCandles) {
+    if (!Array.isArray(dailyCandles) || dailyCandles.length === 0) {
+        showError(`No daily data available for ${stock}`);
+        return;
+    }
+
+    const chartContainer = document.getElementById('chartContainer');
+    const chartTitle = document.getElementById('chartTitle');
+    const canvas = document.getElementById('dailyChart');
+
+    const candlestickData = dailyCandles.map(candle => ({
+        x: candle.timestamp,
+        o: candle.open,
+        h: candle.high,
+        l: candle.low,
+        c: candle.close
+    }));
+
+    const closePrices = dailyCandles.map(candle => candle.close);
+    const ema20 = calculateEMA(closePrices, 20);
+    const ema50 = calculateEMA(closePrices, 50);
+    const ema100 = calculateEMA(closePrices, 100);
+
+    const emaSeries = (emaValues, label, color) => emaValues
+        .map((value, index) => value === null ? null : ({
+            x: dailyCandles[index].timestamp,
+            y: value
+        }))
+        .filter(Boolean)
+        .map(point => ({ ...point, label, color }));
+
+    const datasets = [{
+        label: `${stock} Candlestick`,
+        data: candlestickData,
+        type: 'candlestick',
+        color: {
+            up: '#22bb33',
+            down: '#c41e3a',
+            unchanged: '#999'
+        }
+    }];
+
+    const emaLines = [
+        { values: ema20, label: 'EMA 20', color: '#667eea' },
+        { values: ema50, label: 'EMA 50', color: '#f59e0b' },
+        { values: ema100, label: 'EMA 100', color: '#8b5cf6' }
+    ];
+
+    emaLines.forEach(({ values, label, color }) => {
+        const data = values
+            .map((value, index) => value === null ? null : ({ x: dailyCandles[index].timestamp, y: value }))
+            .filter(Boolean);
+
+        datasets.push({
+            label,
+            type: 'line',
+            data,
+            borderColor: color,
+            backgroundColor: color,
+            fill: false,
+            pointRadius: 0,
+            borderWidth: 2
+        });
+    });
+
+    chartTitle.textContent = `Daily Chart for ${stock}`;
+
+    if (window.dailyChartInstance) {
+        window.dailyChartInstance.destroy();
+        window.dailyChartInstance = null;
+    }
+
+    window.dailyChartInstance = new Chart(canvas.getContext('2d'), {
+        type: 'candlestick',
+        data: { datasets },
+        options: {
+            responsive: false,
+            width: chartContainer.offsetWidth,
+            height: 1000,
+            animation: false,
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'month',
+                        displayFormats: {
+                            month: 'MMM yyyy'
+                        }
+                    },
+                    ticks: {
+                        maxTicksLimit: 12
+                    }
+                },
+                y: {
+                    beginAtZero: false
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        }
+    });
+
+    chartContainer.style.display = 'block';
+    chartContainer.scrollIntoView({ behavior: 'smooth' });
 }
 
 function createRsiCell(value) {
