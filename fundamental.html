@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Fundamental Analysis</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="siteMenu"></div>
+    <div class="container">
+        <h1>🏛️ Stock Fundamental Analysis</h1>
+        <p class="subtitle">Quarterly profit after tax and cash flow for the last five years, plus a fundamentals summary built from public company filings.</p>
+
+        <div class="controls">
+            <div class="control-group" style="flex: 0 0 240px; min-width: 240px;">
+                <label for="stockSelect">Select Stock</label>
+                <select id="stockSelect" style="width: 100%;">
+                    <option value="">Loading stocks...</option>
+                </select>
+            </div>
+            <div class="control-group" style="flex: 0 0 160px; align-self: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="fetchFundamentalData()">Load Analysis</button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching fundamental data... This may take a moment.</div>
+
+        <div class="fundamentals-summary" id="fundamentalsSummary" style="display: none;"></div>
+
+        <div class="chart-grid" id="chartGrid" style="display: none;">
+            <div class="chart-card">
+                <h3>Quarterly Profit After Tax</h3>
+                <canvas id="patChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3>Quarterly Cash Flow</h3>
+                <canvas id="cashFlowChart"></canvas>
+            </div>
+        </div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none; margin-top: 24px;">
+            <table id="fundamentalTable">
+                <thead>
+                    <tr>
+                        <th>Quarter</th>
+                        <th>PAT</th>
+                        <th>Cash Flow</th>
+                        <th>Commentary</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script src="assets/js/fundamental.js"></script>
+</body>
+</html>
