@@ -38,6 +38,10 @@ let allCandles = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    if (!document.getElementById('stockSelect')) {
+        return;
+    }
+
     populateStockDropdown();
     setDefaultDateRange();
     fetchStockData();

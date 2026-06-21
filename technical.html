@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Technical Analysis</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="siteMenu"></div>
+    <div class="container">
+        <h1>📊 Stock Technical Analysis</h1>
+        <p class="subtitle">Derived from the shared daily candle proxy. RSI is calculated on 14-period monthly, weekly, and daily closes.</p>
+
+        <div class="controls">
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="startDate">Start Date</label>
+                <input type="date" id="startDate" min="2018-01-01" />
+            </div>
+            <div class="control-group" style="flex: 0 0 170px;">
+                <label for="endDate">End Date</label>
+                <input type="date" id="endDate" />
+            </div>
+            <div class="control-group" style="flex: 0 0 120px; align-self: flex-end;">
+                <label>&nbsp;</label>
+                <button onclick="fetchTechnicalData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching technical data for all stocks... This may take a moment.</div>
+
+        <div class="table-wrapper" id="tableWrapper" style="display: none;">
+            <table id="technicalTable">
+                <thead>
+                    <tr>
+                        <th>Stock</th>
+                        <th>Monthly RSI</th>
+                        <th>Weekly RSI</th>
+                        <th>Daily RSI</th>
+                        <th>EMA 200 Dist %</th>
+                        <th>EMA 100 Dist %</th>
+                        <th>EMA 50 Dist %</th>
+                        <th>EMA 20 Dist %</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="legend">
+            <h3>Indicator Guide</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f8d7da; color: #842029;">&lt; 40</div>
+                    <span>RSI oversold</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #d1e7dd; color: #0f5132;">&gt; 60</div>
+                    <span>RSI overbought</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #f0f0f0; color: #333;">40-60</div>
+                    <span>RSI neutral</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script src="assets/js/technical.js"></script>
+</body>
+</html>
