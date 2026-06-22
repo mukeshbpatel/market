@@ -54,7 +54,8 @@ async function fetchFundamentalData() {
         }
 
         const data = await response.json();
-        fundamentalRows = (data.quarters || []).slice(-20);
+        // Load data for 2 years (8 quarters)
+        fundamentalRows = (data.quarters || []).slice(-8);
         renderFundamentalView(stock, fundamentalRows, data.overview || {}, data.latestTrend || {});
         showLoading(false);
     } catch (error) {

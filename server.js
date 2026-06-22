@@ -131,7 +131,9 @@ async function fetchYahooFundamentals(stock) {
             operatingCashFlow: null
         };
 
-        existing.operatingCashFlow = getNumericValue(item.operatingCashFlow);
+        // Yahoo Finance returns operating cash flow as 'operatingActivities' or 'operatingCashFlow'
+        const cashFlow = getNumericValue(item.operatingActivities) || getNumericValue(item.operatingCashFlow);
+        existing.operatingCashFlow = cashFlow;
         quarterMap.set(dateKey, existing);
     });
 
