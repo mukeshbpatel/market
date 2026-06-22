@@ -55,7 +55,7 @@ async function fetchFundamentalData() {
 
         const data = await response.json();
         fundamentalRows = (data.quarters || []).slice(-20);
-        renderFundamentalView(stock, fundamentalRows);
+        renderFundamentalView(stock, fundamentalRows, data.overview || {}, data.latestTrend || {});
         showLoading(false);
     } catch (error) {
         showLoading(false);
@@ -63,18 +63,18 @@ async function fetchFundamentalData() {
     }
 }
 
-function renderFundamentalView(stock, quarters) {
+function renderFundamentalView(stock, quarters, overview, latestTrend) {
     if (!quarters || quarters.length === 0) {
         showError(`No fundamental data available for ${stock}`);
         return;
     }
 
-    renderSummary(stock, quarters);
+    renderSummary(stock, quarters, overview, latestTrend);
     renderCharts(quarters);
     renderTable(quarters);
 }
 
-function renderSummary(stock, quarters) {
+function renderSummary(stock, quarters, overview, latestTrend) {
     const summary = document.getElementById('fundamentalsSummary');
     const latest = quarters[quarters.length - 1];
     const previous = quarters[quarters.length - 2] || latest;
@@ -82,17 +82,28 @@ function renderSummary(stock, quarters) {
     const cfGrowth = calculateGrowth(previous?.operatingCashFlow, latest?.operatingCashFlow);
     const avgPat = quarters.reduce((sum, quarter) => sum + (quarter.netProfit || 0), 0) / quarters.length;
     const avgCf = quarters.reduce((sum, quarter) => sum + (quarter.operatingCashFlow || 0), 0) / quarters.length;
+    const prediction = buildPrediction(patGrowth, cfGrowth, overview, latestTrend);
 
     summary.innerHTML = `
         <div class="summary-card">
             <h3>${stock}</h3>
             <p>Latest quarter: <strong>${latest.label}</strong></p>
             <p>Latest PAT: <strong>₹${formatValue(latest.netProfit)}</strong></p>
-            <p>Latest cash flow: <strong>₹${formatValue(latest.operatingCashFlow)}</strong></p>
+            <p>Latest operating cash flow: <strong>₹${formatValue(latest.operatingCashFlow)}</strong></p>
+            <p>Data source: <strong>Yahoo Finance</strong></p>
+        </div>
+        <div class="summary-card">
+            <h3>Snapshot</h3>
+            <p>Current price: <strong>₹${formatValue(overview.currentPrice)}</strong></p>
+            <p>52-week range: <strong>₹${formatValue(overview.fiftyTwoWeekLow)}</strong> - <strong>₹${formatValue(overview.fiftyTwoWeekHigh)}</strong></p>
+            <p>Trailing P/E: <strong>${formatDecimal(overview.trailingPE)}</strong></p>
+            <p>Beta: <strong>${formatDecimal(overview.beta)}</strong></p>
+            <p>Profit margin: <strong>${formatPercent(overview.profitMargins != null ? overview.profitMargins * 100 : null)}</strong></p>
         </div>
         <div class="summary-card">
             <h3>Interpretation</h3>
-            <p>${buildNarrative(stock, quarters, patGrowth, cfGrowth, avgPat, avgCf)}</p>
+            <p>${buildNarrative(stock, quarters, patGrowth, cfGrowth, avgPat, avgCf, overview, latestTrend)}</p>
+            <p style="margin-top: 10px;"><strong>Prediction:</strong> ${prediction}</p>
         </div>
     `;
     summary.style.display = 'grid';
@@ -154,13 +165,42 @@ function renderTable(quarters) {
     document.getElementById('tableWrapper').style.display = 'block';
 }
 
-function buildNarrative(stock, quarters, patGrowth, cfGrowth, avgPat, avgCf) {
+function buildNarrative(stock, quarters, patGrowth, cfGrowth, avgPat, avgCf, overview, latestTrend) {
     const lastFourPat = quarters.slice(-4).map(q => q.netProfit).filter(value => value !== null);
     const lastFourCf = quarters.slice(-4).map(q => q.operatingCashFlow).filter(value => value !== null);
     const patTrend = analyzeTrend(lastFourPat);
     const cfTrend = analyzeTrend(lastFourCf);
 
-    return `${stock} shows a ${patTrend} PAT trajectory and a ${cfTrend} cash-flow pattern over the latest four quarters. Latest quarter PAT moved ${formatPercent(patGrowth)} versus the prior quarter, while operating cash flow changed ${formatPercent(cfGrowth)}. Average quarterly PAT is ₹${formatValue(avgPat)}, compared with average quarterly operating cash flow of ₹${formatValue(avgCf)}. If PAT is rising while cash flow is stable or stronger, the business is likely converting earnings into real cash effectively. Watch whether the company sustains both margins and cash generation across the next few quarters before calling the trend durable.`;
+    return `${stock} shows a ${patTrend} PAT trajectory and a ${cfTrend} cash-flow pattern over the latest four quarters. Latest quarter PAT moved ${formatPercent(patGrowth)} versus the prior quarter, while operating cash flow changed ${formatPercent(cfGrowth)}. Average quarterly PAT is ₹${formatValue(avgPat)}, compared with average quarterly operating cash flow of ₹${formatValue(avgCf)}. The stock is currently trading near ₹${formatValue(overview.currentPrice)}, with a trailing P/E of ${formatDecimal(overview.trailingPE)} and beta of ${formatDecimal(overview.beta)}. Yahoo’s latest reported trend flags PAT as ${latestTrend.pat || 'neutral'} and cash flow as ${latestTrend.cashFlow || 'neutral'}.`;
+}
+
+function buildPrediction(patGrowth, cfGrowth, overview, latestTrend) {
+    const positiveSignals = [
+        patGrowth !== null && patGrowth > 0,
+        cfGrowth !== null && cfGrowth > 0,
+        latestTrend.pat === 'improving',
+        latestTrend.cashFlow === 'improving' || latestTrend.cashFlow === 'stable',
+        overview.profitMargins !== null && overview.profitMargins > 0.12
+    ].filter(Boolean).length;
+
+    const valuation = overview.trailingPE;
+    const near52WLow = overview.currentPrice !== null && overview.fiftyTwoWeekLow !== null
+        ? ((overview.currentPrice - overview.fiftyTwoWeekLow) / Math.max(overview.fiftyTwoWeekLow, 1)) < 0.15
+        : false;
+
+    if (positiveSignals >= 4 && (valuation === null || valuation < 30)) {
+        return 'Bullish bias: the latest fundamentals suggest improving earnings quality and acceptable valuation support.';
+    }
+
+    if (positiveSignals >= 3 && near52WLow) {
+        return 'Constructive but selective: the business is showing some improvement, but it is still trading close to its lows and needs confirmation from the next few quarters.';
+    }
+
+    if (positiveSignals >= 3) {
+        return 'Neutral to mildly positive: growth is present, but the setup still needs stronger cash-flow confirmation before calling it a durable uptrend.';
+    }
+
+    return 'Cautious outlook: the latest quarter does not yet show enough evidence of sustained fundamental improvement.';
 }
 
 function buildQuarterCommentary(quarter, previous) {
@@ -211,6 +251,14 @@ function formatValue(value) {
     }
 
     return Number(value).toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+
+function formatDecimal(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+        return 'N/A';
+    }
+
+    return Number(value).toFixed(2);
 }
 
 function formatPercent(value) {
