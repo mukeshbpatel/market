@@ -273,6 +273,9 @@ function chartOptions(yLabel) {
     return {
         responsive: true,
         maintainAspectRatio: false,
+        layout: {
+            padding: 0
+        },
         scales: {
             y: {
                 beginAtZero: false,
@@ -285,6 +288,9 @@ function chartOptions(yLabel) {
         plugins: {
             legend: {
                 display: false
+            },
+            filler: {
+                propagate: true
             },
             tooltip: {
                 callbacks: {
