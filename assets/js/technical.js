@@ -5,11 +5,51 @@ let technicalSortState = {
     direction: 'asc'
 };
 
+// Filter state
+let filterState = {
+    stockSearch: '',
+    monthlyRsiMin: null,
+    monthlyRsiMax: null,
+    weeklyRsiMin: null,
+    weeklyRsiMax: null,
+    dailyRsiMin: null,
+    dailyRsiMax: null,
+    ema20DistMin: null,
+    ema20DistMax: null,
+    ema50DistMin: null,
+    ema50DistMax: null,
+    ema100DistMin: null,
+    ema100DistMax: null,
+    ema200DistMin: null,
+    ema200DistMax: null
+};
+
+let filteredRows = [];
+
 document.addEventListener('DOMContentLoaded', () => {
     setupTechnicalSortHandlers();
+    setupFilterHandlers();
     setDefaultDateRange();
     fetchTechnicalData();
 });
+
+function setupFilterHandlers() {
+    // Add event listeners to all filter inputs
+    const filterInputIds = [
+        'stockFilter', 'monthlyRsiMin', 'monthlyRsiMax', 'weeklyRsiMin', 'weeklyRsiMax',
+        'dailyRsiMin', 'dailyRsiMax', 'ema20DistMin', 'ema20DistMax', 'ema50DistMin',
+        'ema50DistMax', 'ema100DistMin', 'ema100DistMax', 'ema200DistMin', 'ema200DistMax'
+    ];
+
+    filterInputIds.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.addEventListener('input', () => {
+                updateFilterState();
+            });
+        }
+    });
+}
 
 function setupTechnicalSortHandlers() {
     const headers = document.querySelectorAll('#technicalTable th[data-sort-key]');
@@ -266,6 +306,12 @@ function getLatestEMA(values, period) {
 }
 
 function buildTechnicalTable() {
+    // Show filters section when table is ready
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection) {
+        filtersSection.style.display = 'block';
+    }
+
     renderTechnicalTable();
 }
 
@@ -302,7 +348,10 @@ function renderTechnicalTable() {
 }
 
 function getSortedTechnicalRows() {
-    const rows = technicalRows.slice();
+    // Use filtered rows if filters are active, otherwise use all rows
+    const rowsToSort = filteredRows.length > 0 || Object.values(filterState).some(v => v) ?
+        filteredRows : technicalRows;
+    const rows = rowsToSort.slice();
     const sortKey = technicalSortState.column;
     const direction = technicalSortState.direction === 'desc' ? -1 : 1;
 
@@ -404,4 +453,196 @@ function getRsiColor(rsi) {
     }
 
     return '#f0f0f0';
+}
+
+// Filter Functions
+function updateFilterState() {
+    filterState.stockSearch = document.getElementById('stockFilter')?.value.toUpperCase().trim() || '';
+    filterState.monthlyRsiMin = parseFloat(document.getElementById('monthlyRsiMin')?.value) || null;
+    filterState.monthlyRsiMax = parseFloat(document.getElementById('monthlyRsiMax')?.value) || null;
+    filterState.weeklyRsiMin = parseFloat(document.getElementById('weeklyRsiMin')?.value) || null;
+    filterState.weeklyRsiMax = parseFloat(document.getElementById('weeklyRsiMax')?.value) || null;
+    filterState.dailyRsiMin = parseFloat(document.getElementById('dailyRsiMin')?.value) || null;
+    filterState.dailyRsiMax = parseFloat(document.getElementById('dailyRsiMax')?.value) || null;
+    filterState.ema20DistMin = parseFloat(document.getElementById('ema20DistMin')?.value) || null;
+    filterState.ema20DistMax = parseFloat(document.getElementById('ema20DistMax')?.value) || null;
+    filterState.ema50DistMin = parseFloat(document.getElementById('ema50DistMin')?.value) || null;
+    filterState.ema50DistMax = parseFloat(document.getElementById('ema50DistMax')?.value) || null;
+    filterState.ema100DistMin = parseFloat(document.getElementById('ema100DistMin')?.value) || null;
+    filterState.ema100DistMax = parseFloat(document.getElementById('ema100DistMax')?.value) || null;
+    filterState.ema200DistMin = parseFloat(document.getElementById('ema200DistMin')?.value) || null;
+    filterState.ema200DistMax = parseFloat(document.getElementById('ema200DistMax')?.value) || null;
+}
+
+function applyFilters() {
+    updateFilterState();
+    filteredRows = technicalRows.filter(row => passesFilters(row));
+    renderTechnicalTable();
+    displayFilterResultCount();
+}
+
+function resetFilters() {
+    // Clear all filter inputs
+    document.getElementById('stockFilter').value = '';
+    document.getElementById('monthlyRsiMin').value = '';
+    document.getElementById('monthlyRsiMax').value = '';
+    document.getElementById('weeklyRsiMin').value = '';
+    document.getElementById('weeklyRsiMax').value = '';
+    document.getElementById('dailyRsiMin').value = '';
+    document.getElementById('dailyRsiMax').value = '';
+    document.getElementById('ema20DistMin').value = '';
+    document.getElementById('ema20DistMax').value = '';
+    document.getElementById('ema50DistMin').value = '';
+    document.getElementById('ema50DistMax').value = '';
+    document.getElementById('ema100DistMin').value = '';
+    document.getElementById('ema100DistMax').value = '';
+    document.getElementById('ema200DistMin').value = '';
+    document.getElementById('ema200DistMax').value = '';
+
+    // Reset filter state
+    filterState = {
+        stockSearch: '',
+        monthlyRsiMin: null,
+        monthlyRsiMax: null,
+        weeklyRsiMin: null,
+        weeklyRsiMax: null,
+        dailyRsiMin: null,
+        dailyRsiMax: null,
+        ema20DistMin: null,
+        ema20DistMax: null,
+        ema50DistMin: null,
+        ema50DistMax: null,
+        ema100DistMin: null,
+        ema100DistMax: null,
+        ema200DistMin: null,
+        ema200DistMax: null
+    };
+
+    filteredRows = [];
+    renderTechnicalTable();
+    displayFilterResultCount();
+}
+
+function passesFilters(row) {
+    // Stock search filter
+    if (filterState.stockSearch && !row.stock.includes(filterState.stockSearch)) {
+        return false;
+    }
+
+    // Monthly RSI filter
+    if (row.monthlyRSI !== null) {
+        if (filterState.monthlyRsiMin !== null && row.monthlyRSI < filterState.monthlyRsiMin) {
+            return false;
+        }
+        if (filterState.monthlyRsiMax !== null && row.monthlyRSI > filterState.monthlyRsiMax) {
+            return false;
+        }
+    }
+
+    // Weekly RSI filter
+    if (row.weeklyRSI !== null) {
+        if (filterState.weeklyRsiMin !== null && row.weeklyRSI < filterState.weeklyRsiMin) {
+            return false;
+        }
+        if (filterState.weeklyRsiMax !== null && row.weeklyRSI > filterState.weeklyRsiMax) {
+            return false;
+        }
+    }
+
+    // Daily RSI filter
+    if (row.dailyRSI !== null) {
+        if (filterState.dailyRsiMin !== null && row.dailyRSI < filterState.dailyRsiMin) {
+            return false;
+        }
+        if (filterState.dailyRsiMax !== null && row.dailyRSI > filterState.dailyRsiMax) {
+            return false;
+        }
+    }
+
+    // EMA 20 Distance filter
+    if (row.ema20Distance !== null) {
+        if (filterState.ema20DistMin !== null && row.ema20Distance < filterState.ema20DistMin) {
+            return false;
+        }
+        if (filterState.ema20DistMax !== null && row.ema20Distance > filterState.ema20DistMax) {
+            return false;
+        }
+    }
+
+    // EMA 50 Distance filter
+    if (row.ema50Distance !== null) {
+        if (filterState.ema50DistMin !== null && row.ema50Distance < filterState.ema50DistMin) {
+            return false;
+        }
+        if (filterState.ema50DistMax !== null && row.ema50Distance > filterState.ema50DistMax) {
+            return false;
+        }
+    }
+
+    // EMA 100 Distance filter
+    if (row.ema100Distance !== null) {
+        if (filterState.ema100DistMin !== null && row.ema100Distance < filterState.ema100DistMin) {
+            return false;
+        }
+        if (filterState.ema100DistMax !== null && row.ema100Distance > filterState.ema100DistMax) {
+            return false;
+        }
+    }
+
+    // EMA 200 Distance filter
+    if (row.ema200Distance !== null) {
+        if (filterState.ema200DistMin !== null && row.ema200Distance < filterState.ema200DistMin) {
+            return false;
+        }
+        if (filterState.ema200DistMax !== null && row.ema200Distance > filterState.ema200DistMax) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function toggleFilters() {
+    const filtersContent = document.getElementById('filtersContent');
+    const toggleBtn = document.querySelector('.filter-toggle');
+
+    if (filtersContent.style.display === 'none') {
+        filtersContent.style.display = 'block';
+        toggleBtn.textContent = '▼ Hide';
+    } else {
+        filtersContent.style.display = 'none';
+        toggleBtn.textContent = '▶ Show';
+    }
+}
+
+function displayFilterResultCount() {
+    let resultText = '';
+    if (filteredRows.length > 0) {
+        resultText = `Showing ${filteredRows.length} of ${technicalRows.length} stocks`;
+    } else if (Object.values(filterState).some(v => v)) {
+        resultText = 'No results match your filters';
+    }
+
+    // Update or create result count display
+    let resultCountDiv = document.getElementById('filterResultCount');
+    if (!resultCountDiv && resultText) {
+        resultCountDiv = document.createElement('div');
+        resultCountDiv.id = 'filterResultCount';
+        resultCountDiv.className = 'filter-result-count';
+        document.querySelector('.filters-section').appendChild(resultCountDiv);
+    }
+
+    if (resultCountDiv) {
+        resultCountDiv.textContent = resultText;
+    }
+}
+
+function buildTechnicalTable() {
+    // Show filters section when table is ready
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection) {
+        filtersSection.style.display = 'block';
+    }
+
+    renderTechnicalTable();
 }

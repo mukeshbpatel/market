@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+chart size in<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -24,6 +24,94 @@
             <div class="control-group" style="flex: 0 0 120px; align-self: flex-end;">
                 <label>&nbsp;</label>
                 <button onclick="fetchTechnicalData()">Load Data</button>
+            </div>
+        </div>
+
+        <div class="filters-section" id="filtersSection" style="display: none;">
+            <div class="filters-header" onclick="toggleFilters()" style="cursor: pointer;">
+                <h3>🔍 Filters</h3>
+                <button class="filter-toggle" onclick="event.stopPropagation(); toggleFilters()">▼ Hide</button>
+            </div>
+            
+            <div class="filters-content" id="filtersContent">
+                <div class="filter-group">
+                    <label for="stockFilter">Stock Name Search:</label>
+                    <input type="text" id="stockFilter" placeholder="Search stock (e.g., TCS, INFY)..." />
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="monthlyRsiMin">Monthly RSI Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="monthlyRsiMin" placeholder="Min" min="0" max="100" />
+                            <span>to</span>
+                            <input type="number" id="monthlyRsiMax" placeholder="Max" min="0" max="100" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="weeklyRsiMin">Weekly RSI Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="weeklyRsiMin" placeholder="Min" min="0" max="100" />
+                            <span>to</span>
+                            <input type="number" id="weeklyRsiMax" placeholder="Max" min="0" max="100" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dailyRsiMin">Daily RSI Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="dailyRsiMin" placeholder="Min" min="0" max="100" />
+                            <span>to</span>
+                            <input type="number" id="dailyRsiMax" placeholder="Max" min="0" max="100" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="ema20DistMin">EMA 20 Distance % Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="ema20DistMin" placeholder="Min" step="0.1" />
+                            <span>to</span>
+                            <input type="number" id="ema20DistMax" placeholder="Max" step="0.1" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="ema50DistMin">EMA 50 Distance % Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="ema50DistMin" placeholder="Min" step="0.1" />
+                            <span>to</span>
+                            <input type="number" id="ema50DistMax" placeholder="Max" step="0.1" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="ema100DistMin">EMA 100 Distance % Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="ema100DistMin" placeholder="Min" step="0.1" />
+                            <span>to</span>
+                            <input type="number" id="ema100DistMax" placeholder="Max" step="0.1" />
+                        </div>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="ema200DistMin">EMA 200 Distance % Range:</label>
+                        <div class="range-inputs">
+                            <input type="number" id="ema200DistMin" placeholder="Min" step="0.1" />
+                            <span>to</span>
+                            <input type="number" id="ema200DistMax" placeholder="Max" step="0.1" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="apply-filters-btn" onclick="applyFilters()">Apply Filters</button>
+                    <button class="reset-filters-btn" onclick="resetFilters()">Reset All</button>
+                </div>
             </div>
         </div>
 
