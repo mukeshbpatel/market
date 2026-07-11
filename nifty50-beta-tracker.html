@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nifty 50 — Monthly Beta Grid</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0D12;
+    --panel:#12161D;
+    --panel-2:#171C25;
+    --line:#232936;
+    --text:#DCE3EC;
+    --dim:#7C8899;
+    --dimmer:#4B5563;
+    --amber:#E8A33D;
+    --teal:#3FB8AF;
+    --red:#E5533D;
+    --mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
+    --sans: 'Inter', -apple-system, 'Segoe UI', sans-serif;
+  }
+  @font-face{
+    font-family:'JetBrains Mono';
+    src:local('JetBrains Mono');
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1400px;margin:0 auto;padding:28px 24px 80px;}
+
+  header{
+    display:flex;justify-content:space-between;align-items:flex-end;
+    border-bottom:1px solid var(--line);
+    padding-bottom:18px;margin-bottom:22px;flex-wrap:wrap;gap:14px;
+  }
+  .title-block .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.16em;
+    color:var(--amber);text-transform:uppercase;margin-bottom:6px;
+  }
+  h1{font-size:26px;margin:0;font-weight:650;letter-spacing:-.01em;}
+  .subtitle{color:var(--dim);font-size:13px;margin-top:6px;max-width:520px;line-height:1.5;}
+  .status{
+    font-family:var(--mono);font-size:11.5px;color:var(--dim);
+    text-align:right;line-height:1.7;
+  }
+  .status .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:6px;}
+  .dot.live{background:var(--teal);}
+  .dot.sim{background:var(--amber);}
+
+  .toolbar{
+    display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;
+  }
+  button{
+    font-family:var(--mono);font-size:12px;background:var(--panel-2);
+    color:var(--text);border:1px solid var(--line);border-radius:5px;
+    padding:9px 16px;cursor:pointer;letter-spacing:.03em;
+  }
+  button:hover{border-color:var(--amber);color:var(--amber);}
+  button:disabled{opacity:.45;cursor:default;}
+  button:disabled:hover{border-color:var(--line);color:var(--text);}
+  input[type=text]{
+    font-family:var(--mono);font-size:12px;background:var(--panel);
+    border:1px solid var(--line);border-radius:5px;color:var(--text);
+    padding:9px 12px;width:200px;
+  }
+  input[type=text]:focus{outline:none;border-color:var(--amber);}
+  .progress-wrap{flex:1;min-width:160px;height:3px;background:var(--line);border-radius:2px;overflow:hidden;}
+  .progress-bar{height:100%;background:var(--amber);width:0%;transition:width .2s;}
+
+  .legend{
+    display:flex;align-items:center;gap:8px;font-family:var(--mono);
+    font-size:10.5px;color:var(--dim);margin-left:auto;
+  }
+  .legend .scale{display:flex;height:10px;width:140px;border-radius:2px;overflow:hidden;}
+  .legend .scale div{flex:1;}
+
+  .gran-toggle{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;}
+  .gran-btn{border:none;border-radius:0;background:var(--panel);}
+  .gran-btn.active{background:var(--amber);color:#0A0D12;}
+  .gran-btn.active:hover{color:#0A0D12;border-color:transparent;}
+  .gran-btn:hover{border-color:transparent;}
+  .gran-note{font-family:var(--mono);font-size:11px;color:var(--dimmer);margin-bottom:14px;margin-top:-4px;}
+
+  .panel{
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;
+    overflow:hidden;
+  }
+  .grid-scroll{overflow-x:auto;}
+  table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:12px;min-width:1100px;}
+  thead th{
+    position:sticky;top:0;background:var(--panel-2);z-index:2;
+    padding:10px 8px;text-align:center;color:var(--dim);font-weight:500;
+    border-bottom:1px solid var(--line);font-size:11px;letter-spacing:.02em;white-space:nowrap;
+    cursor:pointer;user-select:none;
+  }
+  thead th:hover{color:var(--amber);}
+  thead th.sorted{color:var(--amber);}
+  thead th .arrow{display:inline-block;margin-left:3px;font-size:9px;opacity:.85;}
+  thead th.stock-col{text-align:left;left:0;position:sticky;z-index:3;padding-left:16px;min-width:150px;}
+  tbody td{padding:9px 8px;text-align:center;border-bottom:1px solid #1a1f28;white-space:nowrap;}
+  tbody td.stock-name{
+    text-align:left;position:sticky;left:0;background:var(--panel);z-index:1;
+    padding-left:16px;color:var(--text);font-weight:500;cursor:pointer;min-width:150px;
+  }
+  tbody td.stock-name:hover{color:var(--amber);}
+  tbody tr:hover td{background:#171d27;}
+  tbody tr:hover td.stock-name{background:#1b222d;}
+  .avg-col{color:var(--dim);border-left:1px solid var(--line);font-weight:600;}
+  .cell{
+    display:inline-block;min-width:44px;padding:3px 0;border-radius:3px;
+    color:#0A0D12;font-weight:600;
+  }
+  .cell.na{background:transparent;color:var(--dimmer);}
+  .sector-tag{font-size:10px;color:var(--dimmer);display:block;margin-top:1px;}
+
+  footer{
+    margin-top:22px;font-size:11.5px;color:var(--dimmer);
+    font-family:var(--mono);line-height:1.7;
+  }
+
+  #detail{
+    display:none;margin-top:22px;
+  }
+  #detail.show{display:block;}
+  #detail .panel{padding:20px;}
+  #detail h2{margin:0 0 4px;font-size:17px;}
+  #detail .meta{color:var(--dim);font-size:12px;font-family:var(--mono);margin-bottom:14px;}
+  canvas{max-height:280px;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-track{background:var(--panel);}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title-block">
+      <div class="eyebrow">NSE · Nifty 50 · Rolling Beta</div>
+      <h1>Month-wise Beta Grid</h1>
+      <div class="subtitle">Beta of each Nifty 50 constituent vs. the Nifty 50 index, computed per calendar month from daily returns over the trailing 12 months.</div>
+    </div>
+    <div class="status" id="statusBox">
+      <div><span class="dot sim"></span>Initializing…</div>
+    </div>
+  </header>
+
+  <div class="toolbar">
+    <button id="loadBtn">Fetch 12-month data</button>
+    <div class="gran-toggle" id="granToggle">
+      <button class="gran-btn active" data-gran="month">Monthly</button>
+      <button class="gran-btn" data-gran="week">Weekly</button>
+    </div>
+    <input type="text" id="filterInput" placeholder="Filter by symbol…">
+    <div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+    <div class="legend">
+      Low
+      <div class="scale">
+        <div style="background:#2F6FA8"></div><div style="background:#3FB8AF"></div>
+        <div style="background:#7C9A5A"></div><div style="background:#E8A33D"></div>
+        <div style="background:#E5533D"></div>
+      </div>
+      High
+    </div>
+  </div>
+  <div class="gran-note" id="granNote">Showing beta by calendar month, trailing 12 months.</div>
+
+  <div class="panel">
+    <div class="grid-scroll">
+      <table id="betaTable">
+        <thead><tr><th class="stock-col">Symbol</th></tr></thead>
+        <tbody id="betaBody"><tr><td class="stock-name" style="color:var(--dim)">Click "Fetch 12-month data" to load the grid…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="detail">
+    <div class="panel">
+      <h2 id="detailTitle">—</h2>
+      <div class="meta" id="detailMeta">—</div>
+      <canvas id="detailChart"></canvas>
+    </div>
+  </div>
+
+  <footer>
+    Beta = Cov(stock daily returns, Nifty 50 daily returns) / Var(Nifty 50 daily returns), computed within each period (10-day min for monthly, 3-day min for weekly). &nbsp;·&nbsp;
+    Live data is requested from Yahoo Finance; if the browser blocks the cross-origin request, figures fall back to a seeded simulation so the tool remains usable — check the status indicator above before treating values as tradeable data.
+  </footer>
+
+</div>
+
+<script>
+// ---- Nifty 50 constituents (symbol : [name, sector]) ----
+const STOCKS = {
+  "RELIANCE":["Reliance Industries","Energy"], "TCS":["Tata Consultancy Services","IT"],
+  "HDFCBANK":["HDFC Bank","Financials"], "ICICIBANK":["ICICI Bank","Financials"],
+  "INFY":["Infosys","IT"], "HINDUNILVR":["Hindustan Unilever","FMCG"],
+  "ITC":["ITC","FMCG"], "SBIN":["State Bank of India","Financials"],
+  "BHARTIARTL":["Bharti Airtel","Telecom"], "KOTAKBANK":["Kotak Mahindra Bank","Financials"],
+  "LT":["Larsen & Toubro","Infra"], "AXISBANK":["Axis Bank","Financials"],
+  "BAJFINANCE":["Bajaj Finance","Financials"], "ASIANPAINT":["Asian Paints","Consumer"],
+  "MARUTI":["Maruti Suzuki","Auto"], "SUNPHARMA":["Sun Pharma","Pharma"],
+  "TITAN":["Titan Company","Consumer"], "ULTRACEMCO":["UltraTech Cement","Cement"],
+  "WIPRO":["Wipro","IT"], "NESTLEIND":["Nestle India","FMCG"],
+  "HCLTECH":["HCL Technologies","IT"], "ONGC":["Oil & Natural Gas Corp","Energy"],
+  "NTPC":["NTPC","Utilities"], "POWERGRID":["Power Grid Corp","Utilities"],
+  "M&M":["Mahindra & Mahindra","Auto"], "TATAMOTORS":["Tata Motors","Auto"],
+  "TATASTEEL":["Tata Steel","Metals"], "ADANIENT":["Adani Enterprises","Conglomerate"],
+  "ADANIPORTS":["Adani Ports","Infra"], "JSWSTEEL":["JSW Steel","Metals"],
+  "GRASIM":["Grasim Industries","Cement"], "TECHM":["Tech Mahindra","IT"],
+  "BAJAJFINSV":["Bajaj Finserv","Financials"], "HDFCLIFE":["HDFC Life Insurance","Financials"],
+  "SBILIFE":["SBI Life Insurance","Financials"], "INDUSINDBK":["IndusInd Bank","Financials"],
+  "CIPLA":["Cipla","Pharma"], "DRREDDY":["Dr. Reddy's Labs","Pharma"],
+  "EICHERMOT":["Eicher Motors","Auto"], "BRITANNIA":["Britannia Industries","FMCG"],
+  "DIVISLAB":["Divi's Laboratories","Pharma"], "COALINDIA":["Coal India","Energy"],
+  "BPCL":["Bharat Petroleum","Energy"], "HEROMOTOCO":["Hero MotoCorp","Auto"],
+  "APOLLOHOSP":["Apollo Hospitals","Healthcare"], "BAJAJ-AUTO":["Bajaj Auto","Auto"],
+  "TATACONSUM":["Tata Consumer Products","FMCG"], "UPL":["UPL Ltd","Chemicals"],
+  "SHREECEM":["Shree Cement","Cement"], "LTIM":["LTIMindtree","IT"],
+  "HINDALCO":["Hindalco Industries","Metals"]
+};
+const INDEX_SYMBOL = "^NSEI";
+
+
+// ---- Time period handling: monthly or weekly granularity ----
+let granularity = "month";     // "month" | "week"
+let periods = [];              // list of period keys for the current granularity
+let betaData = {};             // symbol -> {periodKey: beta}
+let seriesCache = {};          // symbol -> {dates:[], closes:[]}  (raw daily data, always cached)
+let dataSource = "sim";
+
+function monthKeyOf(date){
+  return date.getFullYear()+"-"+String(date.getMonth()+1).padStart(2,"0");
+}
+function monthLabel(key){
+  const [y,m] = key.split("-");
+  return new Date(y, m-1, 1).toLocaleString('en-US',{month:'short'}) + " '" + y.slice(2);
+}
+function buildMonthList(){
+  const now = new Date();
+  const list = [];
+  for(let i=11;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    list.push(monthKeyOf(d));
+  }
+  return list;
+}
+
+function mondayOf(date){
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = (day===0 ? -6 : 1-day);
+  d.setDate(d.getDate()+diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function weekKeyOf(date){
+  const m = mondayOf(date);
+  return m.getFullYear()+"-"+String(m.getMonth()+1).padStart(2,"0")+"-"+String(m.getDate()).padStart(2,"0");
+}
+function weekLabel(key){
+  const m = new Date(key+"T00:00:00");
+  const fri = new Date(m); fri.setDate(fri.getDate()+4);
+  const fmt = d=>d.toLocaleString('en-US',{month:'short',day:'numeric'});
+  return fmt(m)+"–"+fmt(fri);
+}
+function buildWeekList(n){
+  const now = new Date();
+  const thisMonday = mondayOf(now);
+  const list = [];
+  for(let i=n-1;i>=0;i--){
+    const d = new Date(thisMonday); d.setDate(d.getDate()-7*i);
+    list.push(weekKeyOf(d));
+  }
+  return list;
+}
+
+function periodKeyOf(date){ return granularity === "week" ? weekKeyOf(date) : monthKeyOf(date); }
+function periodLabel(key){ return granularity === "week" ? weekLabel(key) : monthLabel(key); }
+function buildPeriodList(){ return granularity === "week" ? buildWeekList(12) : buildMonthList(); }
+function minPointsFor(){ return granularity === "week" ? 3 : 10; }
+
+// ---- Data fetch: try Yahoo Finance via CORS proxy, fallback to seeded simulation ----
+async function fetchYahoo(symbol){
+  const y = symbol === INDEX_SYMBOL ? INDEX_SYMBOL : symbol + ".NS";
+  const target = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(y)}?range=13mo&interval=1d`;
+  const proxied = `https://corsproxy.io/?url=${encodeURIComponent(target)}`;
+  const res = await fetch(proxied, {signal: AbortSignal.timeout(9000)});
+  if(!res.ok) throw new Error("bad response");
+  const json = await res.json();
+  const result = json.chart.result[0];
+  const ts = result.timestamp;
+  const closes = result.indicators.quote[0].close;
+  const dates = ts.map(t => new Date(t*1000));
+  const out = {dates:[], closes:[]};
+  for(let i=0;i<dates.length;i++){
+    if(closes[i]!=null){ out.dates.push(dates[i]); out.closes.push(closes[i]); }
+  }
+  return out;
+}
+
+function seededRand(seedStr){
+  let h = 0;
+  for(let i=0;i<seedStr.length;i++){ h = Math.imul(31,h) + seedStr.charCodeAt(i) | 0; }
+  return function(){
+    h = Math.imul(h ^ (h>>>15), 2246822519);
+    h = Math.imul(h ^ (h>>>13), 3266489917);
+    h ^= h >>> 16;
+    return ((h>>>0)/4294967296);
+  };
+}
+
+function simulateSeries(symbol, days, marketReturns, beta0){
+  const rand = seededRand(symbol);
+  const closes = [];
+  let price = 100 + rand()*900;
+  for(let i=0;i<days;i++){
+    const idio = (rand()-0.5)*0.022;
+    const mkt = marketReturns[i] !== undefined ? marketReturns[i] : (rand()-0.5)*0.012;
+    const r = beta0*mkt + idio;
+    price = price*(1+r);
+    closes.push(price);
+  }
+  return closes;
+}
+function simulateMarket(days){
+  const rand = seededRand("NIFTY50_INDEX_2026");
+  const rets = [];
+  for(let i=0;i<days;i++){ rets.push((rand()-0.5)*0.014); }
+  return rets;
+}
+function simulatedTradingDates(days){
+  const dates = [];
+  let d = new Date(); d.setDate(d.getDate()-Math.round(days*1.45));
+  while(dates.length < days){
+    d.setDate(d.getDate()+1);
+    if(d.getDay()!==0 && d.getDay()!==6) dates.push(new Date(d));
+  }
+  return dates;
+}
+
+// ---- Beta computation: generic over a period-key function ----
+function computeBeta(dates, stockCloses, idxCloses){
+  const n = Math.min(dates.length, stockCloses.length, idxCloses.length);
+  const buckets = {};
+  for(let i=1;i<n;i++){
+    const key = periodKeyOf(dates[i]);
+    const sr = stockCloses[i]/stockCloses[i-1]-1;
+    const ir = idxCloses[i]/idxCloses[i-1]-1;
+    if(!buckets[key]) buckets[key] = {sr:[], ir:[]};
+    buckets[key].sr.push(sr);
+    buckets[key].ir.push(ir);
+  }
+  const minPts = minPointsFor();
+  const result = {};
+  for(const key of Object.keys(buckets)){
+    const {sr, ir} = buckets[key];
+    if(sr.length < minPts){ result[key] = null; continue; }
+    const meanS = sr.reduce((a,b)=>a+b,0)/sr.length;
+    const meanI = ir.reduce((a,b)=>a+b,0)/ir.length;
+    let cov=0, varI=0;
+    for(let i=0;i<sr.length;i++){
+      cov += (sr[i]-meanS)*(ir[i]-meanI);
+      varI += (ir[i]-meanI)*(ir[i]-meanI);
+    }
+    cov/=sr.length; varI/=ir.length;
+    result[key] = varI===0 ? null : cov/varI;
+  }
+  return result;
+}
+
+function rebuildBetaData(){
+  const idx = seriesCache[INDEX_SYMBOL];
+  betaData = {};
+  if(!idx) return;
+  for(const sym of Object.keys(STOCKS)){
+    const s = seriesCache[sym];
+    if(!s){ betaData[sym] = {}; continue; }
+    betaData[sym] = computeBeta(s.dates, s.closes, idx.closes);
+  }
+}
+
+function betaColor(beta){
+  if(beta==null || isNaN(beta)) return null;
+  const stops = [
+    {v:0.4, c:[47,111,168]}, {v:0.8, c:[63,184,175]},
+    {v:1.0, c:[124,154,90]}, {v:1.3, c:[232,163,61]}, {v:1.8, c:[229,83,61]}
+  ];
+  let b = Math.max(0.4, Math.min(1.8, beta));
+  for(let i=0;i<stops.length-1;i++){
+    const a=stops[i], c=stops[i+1];
+    if(b>=a.v && b<=c.v){
+      const t=(b-a.v)/(c.v-a.v);
+      const rgb = a.c.map((av,idx)=>Math.round(av+t*(c.c[idx]-av)));
+      return `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+    }
+  }
+  return `rgb(${stops[stops.length-1].c.join(",")})`;
+}
+
+function setStatus(source, note){
+  const box = document.getElementById("statusBox");
+  const cls = source === "live" ? "live" : "sim";
+  const label = source === "live" ? "LIVE — Yahoo Finance" : "SIMULATED — CORS-blocked fallback";
+  box.innerHTML = `<div><span class="dot ${cls}"></span>${label}</div><div>${note||""}</div>`;
+}
+
+async function loadAll(){
+  const btn = document.getElementById("loadBtn");
+  btn.disabled = true;
+  btn.textContent = "Fetching…";
+  const symbols = Object.keys(STOCKS);
+  const bar = document.getElementById("progressBar");
+  let idxSeries, live = true;
+
+  try{
+    idxSeries = await fetchYahoo(INDEX_SYMBOL);
+    if(idxSeries.closes.length < 30) throw new Error("thin index series");
+  }catch(e){
+    live = false;
+  }
+
+  seriesCache = {};
+
+  if(!live){
+    dataSource = "sim";
+    setStatus("sim", "Live fetch blocked by browser CORS policy — showing seeded simulated data for illustration.");
+    const days = 260;
+    const marketRets = simulateMarket(days);
+    const dates = simulatedTradingDates(days);
+    const idxCloses = [100]; for(const r of marketRets) idxCloses.push(idxCloses[idxCloses.length-1]*(1+r));
+    idxCloses.shift();
+    seriesCache[INDEX_SYMBOL] = {dates, closes: idxCloses};
+    for(let i=0;i<symbols.length;i++){
+      const sym = symbols[i];
+      const beta0 = 0.5 + seededRand(sym+"beta")()*1.1;
+      const closes = simulateSeries(sym, dates.length, marketRets, beta0);
+      seriesCache[sym] = {dates, closes};
+      bar.style.width = Math.round(((i+1)/symbols.length)*100)+"%";
+      await new Promise(r=>setTimeout(r,3));
+    }
+  } else {
+    dataSource = "live";
+    seriesCache[INDEX_SYMBOL] = idxSeries;
+    setStatus("live", `Index series: ${idxSeries.dates.length} trading days · fetching ${symbols.length} constituents…`);
+    let failures = 0;
+    for(let i=0;i<symbols.length;i++){
+      const sym = symbols[i];
+      try{
+        const s = await fetchYahoo(sym);
+        const n = Math.min(s.dates.length, idxSeries.dates.length);
+        seriesCache[sym] = {dates: s.dates.slice(-n), closes: s.closes.slice(-n)};
+      }catch(e){
+        failures++;
+        const beta0 = 0.5 + seededRand(sym+"beta")()*1.1;
+        const days = 260;
+        const marketRets = simulateMarket(days);
+        const dates = simulatedTradingDates(days);
+        const closes = simulateSeries(sym, dates.length, marketRets, beta0);
+        seriesCache[sym] = {dates, closes};
+      }
+      bar.style.width = Math.round(((i+1)/symbols.length)*100)+"%";
+      setStatus("live", `Fetched ${i+1}/${symbols.length} constituents (${failures} fell back to simulation)…`);
+      await new Promise(r=>setTimeout(r, 25));
+    }
+    setStatus(failures>symbols.length*0.3 ? "sim" : "live",
+      failures===0 ? "All 51 series (50 stocks + index) loaded live from Yahoo Finance."
+      : `${symbols.length-failures}/${symbols.length} stocks loaded live · ${failures} used simulated fallback.`);
+  }
+
+  periods = buildPeriodList();
+  rebuildBetaData();
+  renderTable();
+  btn.disabled = false;
+  btn.textContent = "Refresh data";
+  bar.style.width = "100%";
+}
+
+// ---- Sorting ----
+let sortKey = "symbol";
+let sortDir = 1;
+
+function rowAvg(sym){
+  const row = betaData[sym] || {};
+  const numeric = periods.map(p=>row[p]).filter(v=>v!=null && !isNaN(v));
+  return numeric.length ? numeric.reduce((a,b)=>a+b,0)/numeric.length : null;
+}
+
+function sortedSymbols(){
+  const symbols = Object.keys(STOCKS);
+  const withVal = symbols.map(sym=>{
+    let val;
+    if(sortKey === "symbol") val = sym;
+    else if(sortKey === "avg") val = rowAvg(sym);
+    else val = (betaData[sym] || {})[sortKey];
+    return {sym, val};
+  });
+  withVal.sort((a,b)=>{
+    const aNull = a.val==null || (typeof a.val==="number" && isNaN(a.val));
+    const bNull = b.val==null || (typeof b.val==="number" && isNaN(b.val));
+    if(aNull && bNull) return 0;
+    if(aNull) return 1;
+    if(bNull) return -1;
+    if(sortKey === "symbol"){ return sortDir * a.val.localeCompare(b.val); }
+    return sortDir * (a.val - b.val);
+  });
+  return withVal.map(w=>w.sym);
+}
+
+function setSort(key){
+  if(sortKey === key){ sortDir *= -1; }
+  else { sortKey = key; sortDir = key === "symbol" ? 1 : -1; }
+  renderTable();
+}
+
+// ---- Rendering ----
+function renderTable(){
+  const thead = document.querySelector("#betaTable thead tr");
+  const arrow = dir => `<span class="arrow">${dir===1 ? "▲" : "▼"}</span>`;
+  thead.innerHTML =
+    `<th class="stock-col ${sortKey==='symbol'?'sorted':''}" data-key="symbol">Symbol ${sortKey==='symbol'?arrow(sortDir):''}</th>` +
+    periods.map(p=>`<th class="${sortKey===p?'sorted':''}" data-key="${p}">${periodLabel(p)} ${sortKey===p?arrow(sortDir):''}</th>`).join("") +
+    `<th class="avg-col ${sortKey==='avg'?'sorted':''}" data-key="avg">${granularity==='week'?'12W':'12M'} Avg ${sortKey==='avg'?arrow(sortDir):''}</th>`;
+
+  const tbody = document.getElementById("betaBody");
+  const symbols = sortedSymbols();
+  tbody.innerHTML = symbols.map(sym=>{
+    const row = betaData[sym] || {};
+    const vals = periods.map(p=>row[p]);
+    const avg = rowAvg(sym);
+    const cells = vals.map(v=>{
+      if(v==null || isNaN(v)) return `<td><span class="cell na">—</span></td>`;
+      const c = betaColor(v);
+      return `<td><span class="cell" style="background:${c}">${v.toFixed(2)}</span></td>`;
+    }).join("");
+    return `<tr data-sym="${sym}">
+      <td class="stock-name">${sym}<span class="sector-tag">${STOCKS[sym][0]} · ${STOCKS[sym][1]}</span></td>
+      ${cells}
+      <td class="avg-col">${avg!=null ? avg.toFixed(2) : "—"}</td>
+    </tr>`;
+  }).join("");
+
+  document.querySelectorAll("#betaBody .stock-name").forEach(td=>{
+    td.addEventListener("click", ()=> showDetail(td.parentElement.dataset.sym));
+  });
+}
+
+let chartInstance = null;
+function showDetail(sym){
+  const row = betaData[sym] || {};
+  document.getElementById("detail").classList.add("show");
+  document.getElementById("detailTitle").textContent = `${sym} — ${STOCKS[sym][0]}`;
+  const avgVal = rowAvg(sym);
+  const avg = avgVal!=null ? avgVal.toFixed(2) : "—";
+  document.getElementById("detailMeta").textContent =
+    `Sector: ${STOCKS[sym][1]} · ${granularity==='week'?'12-week':'12-month'} average beta: ${avg} · Source: ${dataSource==="live"?"Yahoo Finance (live)":"seeded simulation"}`;
+
+  const ctx = document.getElementById("detailChart").getContext("2d");
+  if(chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: periods.map(periodLabel),
+      datasets: [{
+        label: `${granularity==='week'?'Weekly':'Monthly'} Beta vs Nifty 50`,
+        data: periods.map(p=>row[p]!=null ? Number(row[p].toFixed(3)) : null),
+        backgroundColor: periods.map(p=> row[p]!=null ? betaColor(row[p]) : '#232936'),
+        borderRadius: 3,
+        maxBarThickness: 34
+      }]
+    },
+    options: {
+      responsive:true,
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{ label: c => `Beta: ${c.parsed.y}` } } },
+      scales:{
+        y:{ grid:{color:'#1a1f28'}, ticks:{color:'#7C8899', font:{family:'monospace',size:11}},
+            title:{display:true,text:'Beta',color:'#7C8899'}, suggestedMin:0, suggestedMax:2},
+        x:{ grid:{display:false}, ticks:{color:'#7C8899', font:{family:'monospace',size:11}} }
+      }
+    }
+  });
+  document.getElementById("detail").scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+// ---- Controls ----
+document.getElementById("loadBtn").addEventListener("click", loadAll);
+
+document.querySelector("#betaTable thead").addEventListener("click", (e)=>{
+  const th = e.target.closest("th[data-key]");
+  if(th) setSort(th.dataset.key);
+});
+
+document.getElementById("granToggle").addEventListener("click", (e)=>{
+  const btn = e.target.closest(".gran-btn");
+  if(!btn) return;
+  const newGran = btn.dataset.gran;
+  if(newGran === granularity) return;
+  granularity = newGran;
+  document.querySelectorAll(".gran-btn").forEach(b=>b.classList.toggle("active", b.dataset.gran===granularity));
+  document.getElementById("granNote").textContent = granularity === "week"
+    ? "Showing beta by calendar week (Mon–Fri), trailing 12 weeks. Min. 3 trading days per week."
+    : "Showing beta by calendar month, trailing 12 months. Min. 10 trading days per month.";
+  document.getElementById("loadBtn").textContent = "Refresh data";
+  sortKey = "symbol"; sortDir = 1;
+  periods = buildPeriodList();
+  if(Object.keys(seriesCache).length){
+    rebuildBetaData();
+    renderTable();
+  }
+});
+
+document.getElementById("filterInput").addEventListener("input", (e)=>{
+  const q = e.target.value.trim().toUpperCase();
+  document.querySelectorAll("#betaBody tr").forEach(tr=>{
+    const sym = tr.dataset.sym || "";
+    tr.style.display = sym.includes(q) ? "" : "none";
+  });
+});
+
+periods = buildPeriodList();
+</script>
+</body>
+</html>
