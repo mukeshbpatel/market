@@ -96,7 +96,7 @@ const STOCKS = {
   "SHREECEM":["Shree Cement","Cement"], "LTIM":["LTIMindtree","IT"],
   "HINDALCO":["Hindalco Industries","Metals"]
 };
-const INDEX_SYMBOL = "^NSEI";
+const INDEX_SYMBOL = "NIFTY";
 
 
 // ---- Time period handling: monthly or weekly granularity ----
@@ -157,22 +157,30 @@ function periodLabel(key){ return granularity === "week" ? weekLabel(key) : mont
 function buildPeriodList(){ return granularity === "week" ? buildWeekList(12) : buildMonthList(); }
 function minPointsFor(){ return granularity === "week" ? 3 : 10; }
 
-// ---- Data fetch: try Yahoo Finance via CORS proxy, fallback to seeded simulation ----
-async function fetchYahoo(symbol){
-  const y = symbol === INDEX_SYMBOL ? INDEX_SYMBOL : symbol;
-  const proxyUrl = `/api/yahoo-chart?symbol=${encodeURIComponent(y)}`;
+// ---- Data fetch: use the shared Groww chart proxy endpoint, fallback to seeded simulation ----
+async function fetchSeries(symbol){
+  const targetSymbol = symbol === INDEX_SYMBOL ? INDEX_SYMBOL : symbol;
+  const now = new Date();
+  const endTimeInMillis = now.getTime();
+  const startDate = new Date(now);
+  startDate.setMonth(startDate.getMonth() - 13);
+  const startTimeInMillis = startDate.getTime();
+
+  const proxyUrl = `/api/stock-data?stock=${encodeURIComponent(targetSymbol)}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
   const res = await fetch(proxyUrl, {signal: AbortSignal.timeout(9000)});
   if(!res.ok) throw new Error("bad response");
-  const json = await res.json();
-  const result = json.chart?.result?.[0];
-  if(!result) throw new Error("missing chart result");
-  const ts = result.timestamp;
-  const closes = result.indicators?.quote?.[0]?.close;
-  if(!Array.isArray(ts) || !Array.isArray(closes)) throw new Error("invalid chart payload");
-  const dates = ts.map(t => new Date(t*1000));
+  const data = await res.json();
+  if(!data.candles || !Array.isArray(data.candles)) throw new Error("invalid chart payload");
+
   const out = {dates:[], closes:[]};
-  for(let i=0;i<dates.length;i++){
-    if(closes[i]!=null){ out.dates.push(dates[i]); out.closes.push(closes[i]); }
+  for(const candle of data.candles){
+    let ts = candle[0];
+    if(ts < 10000000000) ts = ts * 1000;
+    const close = candle[4];
+    if(close != null){
+      out.dates.push(new Date(ts));
+      out.closes.push(close);
+    }
   }
   return out;
 }
@@ -279,7 +287,7 @@ function betaColor(beta){
 function setStatus(source, note){
   const box = document.getElementById("statusBox");
   const cls = source === "live" ? "live" : "sim";
-  const label = source === "live" ? "LIVE — Yahoo Finance" : "SIMULATED — CORS-blocked fallback";
+  const label = source === "live" ? "LIVE — Groww" : "SIMULATED — fallback data";
   box.innerHTML = `<div><span class="dot ${cls}"></span>${label}</div><div>${note||""}</div>`;
 }
 
@@ -292,7 +300,7 @@ async function loadAll(){
   let idxSeries, live = true;
 
   try{
-    idxSeries = await fetchYahoo(INDEX_SYMBOL);
+    idxSeries = await fetchSeries(INDEX_SYMBOL);
     if(idxSeries.closes.length < 30) throw new Error("thin index series");
   }catch(e){
     live = false;
@@ -325,7 +333,7 @@ async function loadAll(){
     for(let i=0;i<symbols.length;i++){
       const sym = symbols[i];
       try{
-        const s = await fetchYahoo(sym);
+        const s = await fetchSeries(sym);
         const n = Math.min(s.dates.length, idxSeries.dates.length);
         seriesCache[sym] = {dates: s.dates.slice(-n), closes: s.closes.slice(-n)};
       }catch(e){

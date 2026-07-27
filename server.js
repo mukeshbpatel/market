@@ -25,15 +25,6 @@ function toYahooSymbol(stock) {
     return normalized.endsWith('.NS') ? normalized : `${normalized}.NS`;
 }
 
-function toYahooChartSymbol(stock) {
-    if (!stock) {
-        return '';
-    }
-
-    const normalized = String(stock).trim().toUpperCase();
-    return normalized === '^NSEI' ? '^NSEI' : toYahooSymbol(normalized);
-}
-
 function escapeRegExp(value) {
     return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -200,37 +191,6 @@ app.get('/api/stock-data', async (req, res) => {
         res.json(data);
     } catch (error) {
         console.error('Error fetching data:', error);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-app.get('/api/yahoo-chart', async (req, res) => {
-    try {
-        const symbol = req.query.symbol;
-        if (!symbol) {
-            return res.status(400).json({ error: 'Missing required parameter: symbol' });
-        }
-
-        const yahooSymbol = toYahooChartSymbol(symbol);
-        if (!yahooSymbol) {
-            return res.status(400).json({ error: 'Invalid symbol' });
-        }
-
-        const apiUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yahooSymbol)}?range=13mo&interval=1d`;
-        const response = await fetch(apiUrl, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-            }
-        });
-
-        if (!response.ok) {
-            throw new Error(`Yahoo API Error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        res.json(data);
-    } catch (error) {
-        console.error('Error fetching Yahoo chart data:', error);
         res.status(500).json({ error: error.message });
     }
 });

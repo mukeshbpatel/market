@@ -87,6 +87,28 @@ function populateStockDropdown() {
     }
 }
 
+async function fetchCandles(stock, startTimeInMillis, endTimeInMillis) {
+    if (!stock) {
+        throw new Error('Missing stock symbol');
+    }
+    if (!startTimeInMillis || !endTimeInMillis) {
+        throw new Error('Missing start or end time');
+    }
+
+    const proxyUrl = `/api/stock-data?stock=${encodeURIComponent(stock)}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
+    const response = await fetch(proxyUrl);
+    if (!response.ok) {
+        throw new Error(`API Error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    if (!data.candles || data.candles.length === 0) {
+        throw new Error('No data available for this stock');
+    }
+
+    return data.candles;
+}
+
 async function fetchStockData() {
     const stock = document.getElementById('stockSelect').value;
     if (!stock) {
@@ -115,20 +137,8 @@ async function fetchStockData() {
     try {
         const startTimeInMillis = startDate.getTime();
         const endTimeInMillis = endDate.getTime();
-
-        // Use local backend proxy to bypass CORS restrictions
-        const proxyUrl = `/api/stock-data?stock=${stock}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
-
-        const response = await fetch(proxyUrl);
-        if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-        const data = await response.json();
-
-        if (!data.candles || data.candles.length === 0) {
-            throw new Error('No data available for this stock');
-        }
-
-        processAndDisplayData(data.candles);
+        const candles = await fetchCandles(stock, startTimeInMillis, endTimeInMillis);
+        processAndDisplayData(candles);
         showLoading(false);
     } catch (error) {
         showLoading(false);

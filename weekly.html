@@ -107,16 +107,8 @@
                     try {
                         const startTimeInMillis = startDate.getTime();
                         const endTimeInMillis = endDate.getTime();
-
-                        const proxyUrl = `/api/stock-data?stock=${stock}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
-                        const response = await fetch(proxyUrl);
-                        if (!response.ok) throw new Error(`API Error: ${response.status}`);
-
-                        const data = await response.json();
-                        if (data.candles && data.candles.length > 0) {
-                            return { stock, candles: data.candles };
-                        }
-                        return null;
+                        const candles = await fetchCandles(stock, startTimeInMillis, endTimeInMillis);
+                        return { stock, candles };
                     } catch (error) {
                         console.warn(`Failed to fetch data for ${stock}:`, error);
                         return null;
