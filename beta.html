@@ -420,7 +420,7 @@ function renderTable(){
       return `<td><span class="cell" style="background:${c}">${v.toFixed(2)}</span></td>`;
     }).join("");
     return `<tr data-sym="${sym}">
-      <td class="stock-name">${sym}<span class="sector-tag">${STOCKS[sym][0]} · ${STOCKS[sym][1]}</span></td>
+      <td class="stock-name">${sym}</td>
       ${cells}
       <td class="avg-col">${avg!=null ? avg.toFixed(2) : "—"}</td>
     </tr>`;
