@@ -361,6 +361,249 @@ tr:hover td.month-cell, tr:hover td.week-cell {
     overflow: hidden;
 }
 
+/* Beta page styles */
+.beta-page header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    flex-wrap: wrap;
+    gap: 14px;
+}
+
+.beta-page .title-block .eyebrow {
+    font-weight: 700;
+    color: #667eea;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 8px;
+    font-size: 11px;
+}
+
+.beta-page .subtitle {
+    color: #666;
+    max-width: 520px;
+}
+
+.beta-page .status {
+    text-align: right;
+    font-size: 13px;
+    color: #666;
+    line-height: 1.5;
+}
+
+.beta-page .status .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.beta-page .dot.live { background: #3fb8af; }
+.beta-page .dot.sim { background: #e8a33d; }
+
+.beta-page .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.beta-page .controls button,
+.beta-page .controls input[type="text"] {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    border-radius: 6px;
+}
+
+.beta-page .controls button {
+    background: #667eea;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    transition: all 0.2s ease;
+}
+
+.beta-page .controls button:hover {
+    background: #5a6dd8;
+}
+
+.beta-page .controls input[type="text"] {
+    border: 1px solid #dde6ff;
+    background: white;
+    color: #333;
+    padding: 10px 12px;
+    width: 220px;
+}
+
+.beta-page .gran-toggle {
+    display: inline-flex;
+    border: 1px solid #dde6ff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.beta-page .gran-btn {
+    background: white;
+    border: none;
+    padding: 10px 14px;
+    cursor: pointer;
+    color: #333;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.beta-page .gran-btn.active,
+.beta-page .gran-btn:hover {
+    background: #667eea;
+    color: white;
+}
+
+.beta-page .beta-progress-wrap {
+    flex: 1;
+    min-width: 160px;
+    height: 6px;
+    background: #e9efff;
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.beta-page .beta-progress-bar {
+    height: 100%;
+    background: #667eea;
+    width: 0%;
+    transition: width 0.2s ease;
+}
+
+.beta-page .beta-legend {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #666;
+}
+
+.beta-page .beta-legend .scale {
+    display: flex;
+    height: 10px;
+    width: 140px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.beta-page .gran-note {
+    margin-top: -10px;
+    margin-bottom: 18px;
+    color: #666;
+    font-size: 13px;
+}
+
+.beta-page .table-wrapper {
+    overflow-x: auto;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.08);
+    background: white;
+}
+
+.beta-page table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1100px;
+}
+
+.beta-page thead th {
+    background: #f4f6ff;
+    color: #333;
+    font-weight: 600;
+    border-bottom: 1px solid #e9efff;
+    padding: 12px 10px;
+}
+
+.beta-page tbody td {
+    padding: 12px 10px;
+    border-bottom: 1px solid #f0f2ff;
+    color: #333;
+}
+
+.beta-page tbody td.stock-name {
+    position: sticky;
+    left: 0;
+    background: white;
+    z-index: 1;
+    font-weight: 600;
+    text-align: left;
+    min-width: 150px;
+}
+
+.beta-page tbody tr:hover td {
+    background: #f8f9ff;
+}
+
+.beta-page .avg-col {
+    color: #666;
+    font-weight: 600;
+}
+
+.beta-page .cell {
+    display: inline-block;
+    min-width: 44px;
+    padding: 3px 0;
+    border-radius: 3px;
+    color: #333;
+    font-weight: 600;
+}
+
+.beta-page .cell.na {
+    color: #999;
+}
+
+.beta-page footer {
+    margin-top: 22px;
+    font-size: 12px;
+    color: #666;
+    line-height: 1.7;
+}
+
+.beta-page #detail {
+    display: none;
+    margin-top: 22px;
+}
+
+.beta-page #detail.show {
+    display: block;
+}
+
+.beta-page .chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid #e9efff;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.08);
+}
+
+.beta-page #detail h2 {
+    margin: 0 0 10px;
+    font-size: 20px;
+    color: #333;
+}
+
+.beta-page #detail .meta {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 18px;
+}
+
+.beta-page canvas {
+    max-height: 280px;
+    width: 100%;
+}
+
+.beta-page .stock-name:hover {
+    color: #667eea;
+}
+
 .filters-header {
     display: flex;
     justify-content: space-between;
