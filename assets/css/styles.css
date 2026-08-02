@@ -846,6 +846,14 @@ tr:hover td.month-cell, tr:hover td.week-cell {
         width: 100%;
     }
 
+    tr.outside-envelope {
+        background-color: #fff4e5;
+    }
+
+    tr.outside-envelope td {
+        transition: background-color 0.2s ease;
+    }
+
     #chartContainer {
         padding: 16px;
     }
