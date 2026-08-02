@@ -24,10 +24,8 @@ let filterState = {
     ema100DistMax: null,
     ema200DistMin: null,
     ema200DistMax: null,
-    envelopeUpperDistMin: null,
-    envelopeUpperDistMax: null,
-    envelopeLowerDistMin: null,
-    envelopeLowerDistMax: null
+    envelopeDistMin: null,
+    envelopeDistMax: null
 };
 
 let filteredRows = [];
@@ -45,7 +43,7 @@ function setupFilterHandlers() {
         'stockFilter', 'monthlyRsiMin', 'monthlyRsiMax', 'weeklyRsiMin', 'weeklyRsiMax',
         'dailyRsiMin', 'dailyRsiMax', 'ema20DistMin', 'ema20DistMax', 'ema50DistMin',
         'ema50DistMax', 'ema100DistMin', 'ema100DistMax', 'ema200DistMin', 'ema200DistMax',
-        'envelopeUpperDistMin', 'envelopeUpperDistMax', 'envelopeLowerDistMin', 'envelopeLowerDistMax'
+        'envelopeDistMin', 'envelopeDistMax'
     ];
 
     filterInputIds.forEach(id => {
@@ -178,6 +176,7 @@ function buildTechnicalRow(stock, candles) {
     const envelopeEma = getLatestEMA(closePrices, envelopeSettings.period);
     const envelopeUpper = envelopeEma ? envelopeEma * (1 + envelopeSettings.percent / 100) : null;
     const envelopeLower = envelopeEma ? envelopeEma * (1 - envelopeSettings.percent / 100) : null;
+    const envelopeDistance = calculateEnvelopeDistance(latestClose, envelopeUpper, envelopeLower);
 
     return {
         stock,
@@ -188,8 +187,7 @@ function buildTechnicalRow(stock, candles) {
         ema100Distance: calculateDistance(latestClose, ema100),
         ema50Distance: calculateDistance(latestClose, ema50),
         ema20Distance: calculateDistance(latestClose, ema20),
-        envelopeUpperDistance: calculateDistance(latestClose, envelopeUpper),
-        envelopeLowerDistance: calculateDistance(latestClose, envelopeLower)
+        envelopeDistance
     };
 }
 
@@ -267,6 +265,22 @@ function calculateDistance(closePrice, emaValue) {
     }
 
     return ((closePrice - emaValue) / emaValue) * 100;
+}
+
+function calculateEnvelopeDistance(closePrice, envelopeUpper, envelopeLower) {
+    if (!closePrice || !envelopeUpper || !envelopeLower) {
+        return null;
+    }
+
+    if (closePrice > envelopeUpper) {
+        return ((closePrice - envelopeUpper) / envelopeUpper) * 100;
+    }
+
+    if (closePrice < envelopeLower) {
+        return ((closePrice - envelopeLower) / envelopeLower) * 100;
+    }
+
+    return 0;
 }
 
 function calculateRSI(values, period = TECH_RSI_PERIOD) {
@@ -364,8 +378,7 @@ function renderTechnicalTable() {
         row.appendChild(createDistanceCell(rowData.ema100Distance));
         row.appendChild(createDistanceCell(rowData.ema50Distance));
         row.appendChild(createDistanceCell(rowData.ema20Distance));
-        row.appendChild(createDistanceCell(rowData.envelopeUpperDistance));
-        row.appendChild(createDistanceCell(rowData.envelopeLowerDistance));
+        row.appendChild(createDistanceCell(rowData.envelopeDistance));
 
         if (isOutsideEnvelope(rowData)) {
             row.classList.add('outside-envelope');
@@ -378,8 +391,7 @@ function renderTechnicalTable() {
 }
 
 function isOutsideEnvelope(rowData) {
-    return (rowData.envelopeUpperDistance !== null && rowData.envelopeUpperDistance > 0) ||
-           (rowData.envelopeLowerDistance !== null && rowData.envelopeLowerDistance < 0);
+    return rowData.envelopeDistance !== null && rowData.envelopeDistance !== 0;
 }
 
 function getSortedTechnicalRows() {
@@ -507,10 +519,8 @@ function updateFilterState() {
     filterState.ema100DistMax = parseFloat(document.getElementById('ema100DistMax')?.value) || null;
     filterState.ema200DistMin = parseFloat(document.getElementById('ema200DistMin')?.value) || null;
     filterState.ema200DistMax = parseFloat(document.getElementById('ema200DistMax')?.value) || null;
-    filterState.envelopeUpperDistMin = parseFloat(document.getElementById('envelopeUpperDistMin')?.value) || null;
-    filterState.envelopeUpperDistMax = parseFloat(document.getElementById('envelopeUpperDistMax')?.value) || null;
-    filterState.envelopeLowerDistMin = parseFloat(document.getElementById('envelopeLowerDistMin')?.value) || null;
-    filterState.envelopeLowerDistMax = parseFloat(document.getElementById('envelopeLowerDistMax')?.value) || null;
+    filterState.envelopeDistMin = parseFloat(document.getElementById('envelopeDistMin')?.value) || null;
+    filterState.envelopeDistMax = parseFloat(document.getElementById('envelopeDistMax')?.value) || null;
 }
 
 function applyFilters() {
@@ -537,10 +547,8 @@ function resetFilters() {
     document.getElementById('ema100DistMax').value = '';
     document.getElementById('ema200DistMin').value = '';
     document.getElementById('ema200DistMax').value = '';
-    document.getElementById('envelopeUpperDistMin').value = '';
-    document.getElementById('envelopeUpperDistMax').value = '';
-    document.getElementById('envelopeLowerDistMin').value = '';
-    document.getElementById('envelopeLowerDistMax').value = '';
+    document.getElementById('envelopeDistMin').value = '';
+    document.getElementById('envelopeDistMax').value = '';
 
     // Reset filter state
     filterState = {
@@ -559,10 +567,8 @@ function resetFilters() {
         ema100DistMax: null,
         ema200DistMin: null,
         ema200DistMax: null,
-        envelopeUpperDistMin: null,
-        envelopeUpperDistMax: null,
-        envelopeLowerDistMin: null,
-        envelopeLowerDistMax: null
+        envelopeDistMin: null,
+        envelopeDistMax: null
     };
 
     filteredRows = [];
@@ -646,22 +652,12 @@ function passesFilters(row) {
         }
     }
 
-    // Envelope upper band distance filter
-    if (row.envelopeUpperDistance !== null) {
-        if (filterState.envelopeUpperDistMin !== null && row.envelopeUpperDistance < filterState.envelopeUpperDistMin) {
+    // Envelope distance filter
+    if (row.envelopeDistance !== null) {
+        if (filterState.envelopeDistMin !== null && row.envelopeDistance < filterState.envelopeDistMin) {
             return false;
         }
-        if (filterState.envelopeUpperDistMax !== null && row.envelopeUpperDistance > filterState.envelopeUpperDistMax) {
-            return false;
-        }
-    }
-
-    // Envelope lower band distance filter
-    if (row.envelopeLowerDistance !== null) {
-        if (filterState.envelopeLowerDistMin !== null && row.envelopeLowerDistance < filterState.envelopeLowerDistMin) {
-            return false;
-        }
-        if (filterState.envelopeLowerDistMax !== null && row.envelopeLowerDistance > filterState.envelopeLowerDistMax) {
+        if (filterState.envelopeDistMax !== null && row.envelopeDistance > filterState.envelopeDistMax) {
             return false;
         }
     }

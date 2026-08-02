@@ -118,20 +118,11 @@ chart size in<!DOCTYPE html>
 
                 <div class="filter-row">
                     <div class="filter-group">
-                        <label for="envelopeUpperDistMin">Envelope Upper Distance % Range:</label>
+                        <label for="envelopeDistMin">Envelope Distance % Range:</label>
                         <div class="range-inputs">
-                            <input type="number" id="envelopeUpperDistMin" placeholder="Min" step="0.1" />
+                            <input type="number" id="envelopeDistMin" placeholder="Min" step="0.1" />
                             <span>to</span>
-                            <input type="number" id="envelopeUpperDistMax" placeholder="Max" step="0.1" />
-                        </div>
-                    </div>
-
-                    <div class="filter-group">
-                        <label for="envelopeLowerDistMin">Envelope Lower Distance % Range:</label>
-                        <div class="range-inputs">
-                            <input type="number" id="envelopeLowerDistMin" placeholder="Min" step="0.1" />
-                            <span>to</span>
-                            <input type="number" id="envelopeLowerDistMax" placeholder="Max" step="0.1" />
+                            <input type="number" id="envelopeDistMax" placeholder="Max" step="0.1" />
                         </div>
                     </div>
                 </div>
@@ -158,8 +149,7 @@ chart size in<!DOCTYPE html>
                         <th class="sortable-header" data-sort-key="ema100Distance"><span class="header-label">EMA 100 Dist %</span><span class="sort-indicator"></span></th>
                         <th class="sortable-header" data-sort-key="ema50Distance"><span class="header-label">EMA 50 Dist %</span><span class="sort-indicator"></span></th>
                         <th class="sortable-header" data-sort-key="ema20Distance"><span class="header-label">EMA 20 Dist %</span><span class="sort-indicator"></span></th>
-                        <th class="sortable-header" data-sort-key="envelopeUpperDistance"><span class="header-label">Envelope Upper Dist %</span><span class="sort-indicator"></span></th>
-                        <th class="sortable-header" data-sort-key="envelopeLowerDistance"><span class="header-label">Envelope Lower Dist %</span><span class="sort-indicator"></span></th>
+                        <th class="sortable-header" data-sort-key="envelopeDistance"><span class="header-label">Envelope Dist %</span><span class="sort-indicator"></span></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
