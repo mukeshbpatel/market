@@ -128,7 +128,7 @@
         }
 
         function processAllStocksData(stockResults) {
-            // Generate consecutive 16-week range starting from the most recent week
+            // Generate consecutive 26-week range starting from the most recent week
             const endDate = new Date();
             const startDate = new Date();
             startDate.setDate(endDate.getDate() - (26 * 7)); // 26 weeks ago
@@ -223,7 +223,7 @@
             visibleWeeks.forEach(weekKey => {
                 const weekHeader = createWeeklySortableHeader('', weekKey, 'week-header');
                 // Format week key (YYYY-MM-DD) to show week range
-                const monday = new Date(weekKey);
+                const monday = new Date(`${weekKey}T00:00:00`);
                 const sunday = new Date(monday);
                 sunday.setDate(monday.getDate() + 6);
                 const monMonth = monday.toLocaleString('default', { month: 'short' });

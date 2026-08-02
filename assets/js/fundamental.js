@@ -54,8 +54,8 @@ async function fetchFundamentalData() {
         }
 
         const data = await response.json();
-        // Load data for 2 years (8 quarters)
-        fundamentalRows = (data.quarters || []).slice(-8);
+        // Load the latest five years of quarterly data (20 quarters)
+        fundamentalRows = (data.quarters || []).slice(-20);
         renderFundamentalView(stock, fundamentalRows, data.overview || {}, data.latestTrend || {});
         showLoading(false);
     } catch (error) {
@@ -89,8 +89,8 @@ function renderSummary(stock, quarters, overview, latestTrend) {
         <div class="summary-card">
             <h3>${stock}</h3>
             <p>Latest quarter: <strong>${latest.label}</strong></p>
-            <p>Latest PAT: <strong>₹${formatValue(latest.netProfit)}</strong></p>
-            <p>Latest operating cash flow: <strong>₹${formatValue(latest.operatingCashFlow)}</strong></p>
+            <p>Latest PAT (₹ Crores): <strong>${formatCroreValue(latest.netProfit)}</strong></p>
+            <p>Latest operating cash flow (₹ Crores): <strong>${formatCroreValue(latest.operatingCashFlow)}</strong></p>
             <p>Data source: <strong>Yahoo Finance</strong></p>
         </div>
         <div class="summary-card">
@@ -112,8 +112,8 @@ function renderSummary(stock, quarters, overview, latestTrend) {
 
 function renderCharts(quarters) {
     const labels = quarters.map(quarter => quarter.label);
-    const patValues = quarters.map(quarter => quarter.netProfit);
-    const cashFlowValues = quarters.map(quarter => quarter.operatingCashFlow);
+    const patValues = quarters.map(quarter => convertToCrores(quarter.netProfit));
+    const cashFlowValues = quarters.map(quarter => convertToCrores(quarter.operatingCashFlow));
 
     destroyChart('pat');
     destroyChart('cashFlow');
@@ -156,8 +156,8 @@ function renderTable(quarters) {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${quarter.label}</td>
-            <td>${formatValue(quarter.netProfit)}</td>
-            <td>${formatValue(quarter.operatingCashFlow)}</td>
+            <td>${formatCroreValue(quarter.netProfit)}</td>
+            <td>${formatCroreValue(quarter.operatingCashFlow)}</td>
             <td>${buildQuarterCommentary(quarter, previous)}</td>
         `;
         tbody.appendChild(row);
@@ -254,6 +254,23 @@ function formatValue(value) {
     return Number(value).toLocaleString('en-IN', { maximumFractionDigits: 0 });
 }
 
+function convertToCrores(value) {
+    if (value === null || value === undefined || Number.isNaN(value)) {
+        return null;
+    }
+
+    return Number(value) / 10000000;
+}
+
+function formatCroreValue(value) {
+    const croreValue = convertToCrores(value);
+    if (croreValue === null) {
+        return 'N/A';
+    }
+
+    return `${formatValue(croreValue)} Crores`;
+}
+
 function formatDecimal(value) {
     if (value === null || value === undefined || Number.isNaN(value)) {
         return 'N/A';
@@ -295,7 +312,7 @@ function chartOptions(yLabel) {
             },
             tooltip: {
                 callbacks: {
-                    label: (context) => `${context.dataset.label}: ₹${formatValue(context.raw)}`
+                    label: (context) => `${context.dataset.label}: ₹${formatValue(context.raw)} Crores`
                 }
             }
         }
