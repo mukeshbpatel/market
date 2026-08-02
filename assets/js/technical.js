@@ -272,11 +272,11 @@ function calculateEnvelopeDistance(closePrice, envelopeUpper, envelopeLower) {
         return null;
     }
 
-    if (closePrice > envelopeUpper) {
+    if (closePrice >= envelopeUpper) {
         return ((closePrice - envelopeUpper) / envelopeUpper) * 100;
     }
 
-    if (closePrice < envelopeLower) {
+    if (closePrice <= envelopeLower) {
         return ((closePrice - envelopeLower) / envelopeLower) * 100;
     }
 
