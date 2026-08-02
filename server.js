@@ -89,41 +89,27 @@ function getTrendLabel(current, previous) {
 
 async function fetchYahooFundamentals(stock) {
     const symbol = toYahooSymbol(stock);
-    const [financialSeries, quoteSummary] = await Promise.all([
+    const [financialSeries, cashFlowSeries, quoteSummary] = await Promise.all([
         yahooFinance.fundamentalsTimeSeries(symbol, {
             period1: '2010-01-01',
             period2: new Date(),
             type: 'quarterly',
             module: 'financials'
         }),
+        yahooFinance.fundamentalsTimeSeries(symbol, {
+            period1: '2010-01-01',
+            period2: new Date(),
+            type: 'quarterly',
+            module: 'cash-flow'
+        }),
         yahooFinance.quoteSummary(symbol, {
-            modules: ['price', 'summaryDetail', 'defaultKeyStatistics', 'financialData', 'cashflowStatementHistoryQuarterly']
+            modules: ['price', 'summaryDetail', 'defaultKeyStatistics', 'financialData']
         })
     ]);
 
     const quarterMap = new Map();
 
-    financialSeries.forEach(item => {
-        const dateKey = getDateKey(item.date);
-        if (!dateKey) {
-            return;
-        }
-
-        quarterMap.set(dateKey, {
-            date: dateKey,
-            label: formatQuarterLabel(dateKey),
-            netProfit: getNumericValue(item.netIncome),
-            operatingCashFlow: null
-        });
-    });
-
-    const cashflowStatements = quoteSummary?.cashflowStatementHistoryQuarterly?.cashflowStatements || [];
-    cashflowStatements.forEach(item => {
-        const dateKey = getDateKey(item.date || item.endDate);
-        if (!dateKey) {
-            return;
-        }
-
+    const ensureQuarter = (dateKey) => {
         const existing = quarterMap.get(dateKey) || {
             date: dateKey,
             label: formatQuarterLabel(dateKey),
@@ -131,9 +117,50 @@ async function fetchYahooFundamentals(stock) {
             operatingCashFlow: null
         };
 
-        // Yahoo Finance returns operating cash flow as 'operatingActivities' or 'operatingCashFlow'
-        const cashFlow = getNumericValue(item.operatingActivities) || getNumericValue(item.operatingCashFlow);
-        existing.operatingCashFlow = cashFlow;
+        quarterMap.set(dateKey, existing);
+        return existing;
+    };
+
+    financialSeries.forEach(item => {
+        const dateKey = getDateKey(item.date);
+        if (!dateKey) {
+            return;
+        }
+
+        const quarter = ensureQuarter(dateKey);
+        quarter.netProfit = quarter.netProfit ?? getNumericValue(item.netIncome)
+            ?? getNumericValue(item.netIncomeCommonStockholders)
+            ?? getNumericValue(item.netIncomeFromContinuingAndDiscontinuedOperation)
+            ?? getNumericValue(item.netIncomeContinuousOperations);
+    });
+
+    cashFlowSeries.forEach(item => {
+        const dateKey = getDateKey(item.date);
+        if (!dateKey) {
+            return;
+        }
+
+        const quarter = ensureQuarter(dateKey);
+        quarter.operatingCashFlow = quarter.operatingCashFlow ?? getNumericValue(item.operatingCashFlow)
+            ?? getNumericValue(item.cashFlowFromOperatingActivities)
+            ?? getNumericValue(item.cashFlow)
+            ?? getNumericValue(item.cashFlowFromContinuingOperatingActivities)
+            ?? getNumericValue(item.operatingCashFlowFromContinuingOperations);
+    });
+
+    const quoteSummaryCashFlow = quoteSummary?.cashflowStatementHistoryQuarterly?.cashflowStatements || [];
+    quoteSummaryCashFlow.forEach(item => {
+        const dateKey = getDateKey(item.date || item.endDate);
+        if (!dateKey) {
+            return;
+        }
+
+        const existing = ensureQuarter(dateKey);
+        const cashFlow = getNumericValue(item.operatingActivities)
+            || getNumericValue(item.operatingCashFlow)
+            || getNumericValue(item.cashflow);
+
+        existing.operatingCashFlow = existing.operatingCashFlow ?? cashFlow;
         quarterMap.set(dateKey, existing);
     });
 
