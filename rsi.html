@@ -19,19 +19,15 @@
         <div class="rsi-legend">
             <div class="legend-item">
                 <span class="legend-color" style="background: linear-gradient(to right, #90EE90, #228B22);"></span>
-                <span>Monthly/Weekly RSI > 60 (Green)</span>
+                <span>RSI > 60 (Green)</span>
             </div>
             <div class="legend-item">
-                <span class="legend-color" style="background: #FFD700;"></span>
-                <span>Daily RSI ≈ 50 (Yellow)</span>
-            </div>
-            <div class="legend-item">
-                <span class="legend-color" style="background: linear-gradient(to right, #90EE90, #228B22);"></span>
-                <span>Daily RSI > 60 (Green)</span>
+                <span class="legend-color" style="background: linear-gradient(to right, #FFD700, #FFFF00);"></span>
+                <span>RSI 40-60 (Yellow)</span>
             </div>
             <div class="legend-item">
                 <span class="legend-color" style="background: linear-gradient(to right, #FFB6C6, #DC143C);"></span>
-                <span>Daily RSI < 40 (Red)</span>
+                <span>RSI < 40 (Red)</span>
             </div>
         </div>
 
@@ -40,10 +36,10 @@
             <table class="rsi-table">
                 <thead>
                     <tr>
-                        <th>Stock Symbol</th>
-                        <th>Monthly RSI</th>
-                        <th>Weekly RSI</th>
-                        <th>Daily RSI</th>
+                        <th class="sortable-header" data-sort-key="stock">Stock Symbol <span class="sort-indicator"></span></th>
+                        <th class="sortable-header" data-sort-key="monthly">Monthly RSI <span class="sort-indicator"></span></th>
+                        <th class="sortable-header" data-sort-key="weekly">Weekly RSI <span class="sort-indicator"></span></th>
+                        <th class="sortable-header" data-sort-key="daily">Daily RSI <span class="sort-indicator"></span></th>
                     </tr>
                 </thead>
                 <tbody id="rsiTableBody">

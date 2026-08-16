@@ -943,6 +943,25 @@ tr:hover td.month-cell, tr:hover td.week-cell {
     font-size: 14px;
 }
 
+.rsi-table th.sortable-header {
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s;
+}
+
+.rsi-table th.sortable-header:hover {
+    background: linear-gradient(135deg, #5a6dd8 0%, #6b3d95 100%);
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 6px;
+    min-width: 10px;
+    vertical-align: middle;
+    font-size: 12px;
+    line-height: 1;
+}
+
 .rsi-table td {
     padding: 12px 15px;
     text-align: center;

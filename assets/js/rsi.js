@@ -18,6 +18,11 @@ function convertISTTimestampToDate(timestamp) {
 }
 
 let allStocksRSI = {};
+let currentRSIData = [];
+let rsiSortState = {
+    column: 'stock',
+    direction: 'asc'
+};
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -25,8 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
+    setupRSISortHandlers();
     fetchAllStocksRSI();
 });
+
+function setupRSISortHandlers() {
+    const headers = document.querySelectorAll('#rsiTableContainer .sortable-header');
+    headers.forEach(header => {
+        header.addEventListener('click', () => {
+            const sortKey = header.dataset.sortKey;
+            if (rsiSortState.column === sortKey) {
+                rsiSortState.direction = rsiSortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                rsiSortState.column = sortKey;
+                rsiSortState.direction = 'asc';
+            }
+            displayAllStocksRSI(currentRSIData);
+        });
+    });
+}
 
 async function fetchAllStocksRSI() {
     showLoading(true);
@@ -225,9 +247,51 @@ function displayAllStocksRSI(rsiResults) {
     const container = document.getElementById('rsiTableContainer');
     const tbody = document.getElementById('rsiTableBody');
 
+    // Store data for sorting
+    currentRSIData = [...rsiResults];
+
+    // Sort the data
+    currentRSIData.sort((a, b) => {
+        let valueA, valueB;
+
+        switch (rsiSortState.column) {
+            case 'stock':
+                valueA = a.stock.toUpperCase();
+                valueB = b.stock.toUpperCase();
+                break;
+            case 'monthly':
+                valueA = a.monthlyRsi ?? -Infinity;
+                valueB = b.monthlyRsi ?? -Infinity;
+                break;
+            case 'weekly':
+                valueA = a.weeklyRsi ?? -Infinity;
+                valueB = b.weeklyRsi ?? -Infinity;
+                break;
+            case 'daily':
+                valueA = a.dailyRsi ?? -Infinity;
+                valueB = b.dailyRsi ?? -Infinity;
+                break;
+            default:
+                return 0;
+        }
+
+        if (typeof valueA === 'string') {
+            return rsiSortState.direction === 'asc' ? valueA.localeCompare(valueB) : valueB.localeCompare(valueA);
+        }
+
+        if (rsiSortState.direction === 'asc') {
+            return valueA - valueB;
+        } else {
+            return valueB - valueA;
+        }
+    });
+
+    // Update sort indicators
+    updateRSISortIndicators();
+
     tbody.innerHTML = '';
     
-    rsiResults.forEach(row => {
+    currentRSIData.forEach(row => {
         const tr = document.createElement('tr');
 
         // Stock Symbol cell
@@ -240,7 +304,7 @@ function displayAllStocksRSI(rsiResults) {
         const monthlyCell = document.createElement('td');
         if (row.monthlyRsi !== null) {
             monthlyCell.textContent = row.monthlyRsi.toFixed(2);
-            monthlyCell.style.backgroundColor = getMonthlyWeeklyColor(row.monthlyRsi);
+            monthlyCell.style.backgroundColor = getRSIColor(row.monthlyRsi);
         } else {
             monthlyCell.textContent = '-';
         }
@@ -250,7 +314,7 @@ function displayAllStocksRSI(rsiResults) {
         const weeklyCell = document.createElement('td');
         if (row.weeklyRsi !== null) {
             weeklyCell.textContent = row.weeklyRsi.toFixed(2);
-            weeklyCell.style.backgroundColor = getMonthlyWeeklyColor(row.weeklyRsi);
+            weeklyCell.style.backgroundColor = getRSIColor(row.weeklyRsi);
         } else {
             weeklyCell.textContent = '-';
         }
@@ -260,7 +324,7 @@ function displayAllStocksRSI(rsiResults) {
         const dailyCell = document.createElement('td');
         if (row.dailyRsi !== null) {
             dailyCell.textContent = row.dailyRsi.toFixed(2);
-            dailyCell.style.backgroundColor = getDailyColor(row.dailyRsi);
+            dailyCell.style.backgroundColor = getRSIColor(row.dailyRsi);
         } else {
             dailyCell.textContent = '-';
         }
@@ -270,6 +334,21 @@ function displayAllStocksRSI(rsiResults) {
     });
 
     container.style.display = 'block';
+}
+
+function updateRSISortIndicators() {
+    const headers = document.querySelectorAll('#rsiTableContainer .sortable-header');
+    headers.forEach(header => {
+        const indicator = header.querySelector('.sort-indicator');
+        const sortKey = header.dataset.sortKey;
+
+        if (sortKey === rsiSortState.column) {
+            indicator.textContent = rsiSortState.direction === 'asc' ? '▲' : '▼';
+            indicator.style.color = '#667eea';
+        } else {
+            indicator.textContent = '';
+        }
+    });
 }
 
 function getMonthlyWeeklyColor(rsi) {
@@ -282,16 +361,27 @@ function getMonthlyWeeklyColor(rsi) {
         const blue = Math.round(144 - (144 * intensity)); // 144 -> 0
         return `rgb(${red}, ${green}, ${blue})`;
     }
-    return 'transparent';
+    // RSI < 40: shades of red
+    else if (rsi < 40) {
+        const intensity = Math.min((40 - rsi) / 40, 1);
+        const red = Math.round(255 * (0.5 + 0.5 * intensity)); // 255
+        const green = Math.round(182 - (182 * intensity)); // 182 -> 0
+        const blue = Math.round(198 - (198 * intensity)); // 198 -> 0
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
+    // RSI between 40 and 60: shades of yellow
+    else {
+        const intensity = (rsi - 40) / 20; // 0 to 1 scale
+        const red = Math.round(255); // Keep full red
+        const green = Math.round(200 + (55 * intensity)); // 200 -> 255
+        const blue = Math.round(0 + (55 * intensity)); // 0 -> 55
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
 }
 
 function getDailyColor(rsi) {
-    // RSI crossing 50: yellow (48-52 range)
-    if (rsi >= 48 && rsi <= 52) {
-        return '#FFD700'; // Golden yellow
-    }
     // RSI > 60: shades of green
-    else if (rsi > 60) {
+    if (rsi > 60) {
         const intensity = Math.min((rsi - 60) / 40, 1);
         const red = Math.round(144 - (144 * intensity));
         const green = Math.round(238 - (16 * intensity));
@@ -306,7 +396,42 @@ function getDailyColor(rsi) {
         const blue = Math.round(198 - (198 * intensity)); // 198 -> 0
         return `rgb(${red}, ${green}, ${blue})`;
     }
-    return 'transparent';
+    // RSI between 40 and 60: shades of yellow
+    else {
+        const intensity = (rsi - 40) / 20; // 0 to 1 scale
+        const red = Math.round(255); // Keep full red
+        const green = Math.round(200 + (55 * intensity)); // 200 -> 255
+        const blue = Math.round(0 + (55 * intensity)); // 0 -> 55
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
+}
+
+function getRSIColor(rsi) {
+    // Unified RSI color function for all columns
+    // RSI > 60: shades of green
+    if (rsi > 60) {
+        const intensity = Math.min((rsi - 60) / 40, 1);
+        const red = Math.round(144 - (144 * intensity));
+        const green = Math.round(238 - (16 * intensity));
+        const blue = Math.round(144 - (144 * intensity));
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
+    // RSI < 40: shades of red
+    else if (rsi < 40) {
+        const intensity = Math.min((40 - rsi) / 40, 1);
+        const red = Math.round(255 * (0.5 + 0.5 * intensity));
+        const green = Math.round(182 - (182 * intensity));
+        const blue = Math.round(198 - (198 * intensity));
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
+    // RSI between 40 and 60: shades of yellow
+    else {
+        const intensity = (rsi - 40) / 20;
+        const red = Math.round(255);
+        const green = Math.round(200 + (55 * intensity));
+        const blue = Math.round(0 + (55 * intensity));
+        return `rgb(${red}, ${green}, ${blue})`;
+    }
 }
 
 function updateLoadingProgress(current, total) {
