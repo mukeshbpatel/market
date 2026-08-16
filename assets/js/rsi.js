@@ -58,8 +58,12 @@ async function fetchAllStocksRSI() {
     const endDate = new Date();
     const startDate = new Date(endDate.getFullYear() - 2, endDate.getMonth(), endDate.getDate());
 
-    const startTimeInMillis = startDate.getTime();
-    const endTimeInMillis = endDate.getTime();
+    // Convert to IST timestamps
+    const endDateIST = new Date(Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), 0, 0, 0, 0));
+    const startDateIST = new Date(Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate(), 0, 0, 0, 0));
+    
+    const startTimeInMillis = startDateIST.getTime() - IST_OFFSET_MS;
+    const endTimeInMillis = endDateIST.getTime() - IST_OFFSET_MS;
 
     // Fetch data for all stocks
     const stocks = MARKET_CAP_ORDER.slice(0, MARKET_CAP_ORDER.length); // All stocks in market cap order
