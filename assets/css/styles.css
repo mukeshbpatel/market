@@ -895,3 +895,95 @@ tr:hover td.month-cell, tr:hover td.week-cell {
         padding: 12px;
     }
 }
+
+/* RSI Tracker Styles */
+.rsi-legend {
+    display: flex;
+    gap: 30px;
+    flex-wrap: wrap;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.rsi-legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    color: #333;
+}
+
+.rsi-legend .legend-color {
+    width: 50px;
+    height: 30px;
+    border-radius: 4px;
+    display: block;
+    border: 1px solid #ddd;
+}
+
+.rsi-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    margin-top: 20px;
+}
+
+.rsi-table thead {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.rsi-table th {
+    color: white;
+    font-weight: 600;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+    font-size: 14px;
+}
+
+.rsi-table td {
+    padding: 12px 15px;
+    text-align: center;
+    border: 1px solid #e9ecef;
+    font-weight: 500;
+    font-size: 13px;
+    transition: all 0.2s;
+}
+
+.rsi-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.rsi-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+#rsiTableContainer {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .rsi-legend {
+        gap: 15px;
+        padding: 15px;
+    }
+
+    .rsi-legend .legend-item {
+        font-size: 12px;
+    }
+
+    .rsi-table th,
+    .rsi-table td {
+        padding: 10px 8px;
+        font-size: 11px;
+    }
+
+    .rsi-legend .legend-color {
+        width: 40px;
+        height: 25px;
+    }
+}

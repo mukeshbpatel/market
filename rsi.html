@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSI Tracker - Monthly, Weekly & Daily</title>
+    <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+    <div id="siteMenu"></div>
+    <div class="container">
+        <h1>📊 RSI Tracker (Monthly, Weekly & Daily)</h1>
+        <p class="subtitle">Real-time Relative Strength Index (RSI) for all NIFTY 100 stocks across multiple timeframes.</p>
+
+        <div class="error" id="errorMsg"></div>
+        <div class="loading" id="loading">⏳ Fetching data and calculating RSI for all stocks... This may take a moment.</div>
+
+        <!-- Legend -->
+        <div class="rsi-legend">
+            <div class="legend-item">
+                <span class="legend-color" style="background: linear-gradient(to right, #90EE90, #228B22);"></span>
+                <span>Monthly/Weekly RSI > 60 (Green)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: #FFD700;"></span>
+                <span>Daily RSI ≈ 50 (Yellow)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: linear-gradient(to right, #90EE90, #228B22);"></span>
+                <span>Daily RSI > 60 (Green)</span>
+            </div>
+            <div class="legend-item">
+                <span class="legend-color" style="background: linear-gradient(to right, #FFB6C6, #DC143C);"></span>
+                <span>Daily RSI < 40 (Red)</span>
+            </div>
+        </div>
+
+        <!-- RSI Table -->
+        <div id="rsiTableContainer" style="display: none;">
+            <table class="rsi-table">
+                <thead>
+                    <tr>
+                        <th>Stock Symbol</th>
+                        <th>Monthly RSI</th>
+                        <th>Weekly RSI</th>
+                        <th>Daily RSI</th>
+                    </tr>
+                </thead>
+                <tbody id="rsiTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="assets/js/app.js"></script>
+    <script src="assets/js/menu.js"></script>
+    <script src="assets/js/rsi.js"></script>
+</body>
+</html>
