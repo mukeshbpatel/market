@@ -1,4 +1,22 @@
 // RSI Calculator for all stocks - multiple timeframes
+// Timezone utility for IST (UTC+5:30)
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+
+function convertDateToISTTimestamp(dateString) {
+    // Parse date string (YYYY-MM-DD format from input)
+    const [year, month, day] = dateString.split('-').map(Number);
+    // Create date at midnight UTC
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    // Adjust to IST by subtracting IST offset to get the UTC timestamp for midnight IST
+    return utcDate.getTime() - IST_OFFSET_MS;
+}
+
+function convertISTTimestampToDate(timestamp) {
+    // Convert timestamp to date in IST
+    const date = new Date(timestamp + IST_OFFSET_MS);
+    return date;
+}
+
 let allStocksRSI = {};
 
 // Initialize
@@ -103,7 +121,7 @@ function groupByWeek(candles) {
             timestamp = timestamp * 1000;
         }
 
-        const date = new Date(timestamp);
+        const date = convertISTTimestampToDate(timestamp);
         const year = date.getFullYear();
         const week = getWeekNumber(date);
         const weekKey = `${year}-${week}`;
@@ -136,7 +154,7 @@ function groupByMonth(candles) {
             timestamp = timestamp * 1000;
         }
 
-        const date = new Date(timestamp);
+        const date = convertISTTimestampToDate(timestamp);
         const year = date.getFullYear();
         const month = date.getMonth();
         const monthKey = `${year}-${month}`;

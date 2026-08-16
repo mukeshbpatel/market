@@ -1,6 +1,25 @@
 const TECH_RSI_PERIOD = 14;
 const TECH_ENVELOPE_DEFAULT_PERIOD = 200;
 const TECH_ENVELOPE_DEFAULT_PERCENT = 14;
+
+// Timezone utility for IST (UTC+5:30)
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+
+function convertDateToISTTimestamp(dateString) {
+    // Parse date string (YYYY-MM-DD format from input)
+    const [year, month, day] = dateString.split('-').map(Number);
+    // Create date at midnight UTC
+    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
+    // Adjust to IST by subtracting IST offset to get the UTC timestamp for midnight IST
+    return utcDate.getTime() - IST_OFFSET_MS;
+}
+
+function convertISTTimestampToDate(timestamp) {
+    // Convert timestamp to date in IST
+    const date = new Date(timestamp + IST_OFFSET_MS);
+    return date;
+}
+
 let technicalRows = [];
 let technicalSortState = {
     column: 'marketCap',
@@ -114,8 +133,8 @@ async function fetchTechnicalData() {
     showError('');
 
     try {
-        const startTimeInMillis = startDate.getTime();
-        const endTimeInMillis = endDate.getTime();
+        const startTimeInMillis = convertDateToISTTimestamp(startDateInput);
+        const endTimeInMillis = convertDateToISTTimestamp(endDateInput);
         const stocks = [...new Set(NIFTY_100_STOCKS)];
         const sortedStocks = stocks.sort((a, b) => {
             const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
@@ -225,7 +244,7 @@ function aggregateClosesByWeek(candles) {
     const weeklyMap = {};
 
     candles.forEach(candle => {
-        const date = new Date(candle.timestamp);
+        const date = convertISTTimestampToDate(candle.timestamp);
         const weekStart = new Date(date);
         weekStart.setDate(date.getDate() - date.getDay() + 1);
 
@@ -246,7 +265,7 @@ function aggregateClosesByMonth(candles) {
     const monthlyMap = {};
 
     candles.forEach(candle => {
-        const date = new Date(candle.timestamp);
+        const date = convertISTTimestampToDate(candle.timestamp);
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const monthKey = `${year}-${month}`;

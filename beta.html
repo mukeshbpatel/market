@@ -157,14 +157,22 @@ function periodLabel(key){ return granularity === "week" ? weekLabel(key) : mont
 function buildPeriodList(){ return granularity === "week" ? buildWeekList(12) : buildMonthList(); }
 function minPointsFor(){ return granularity === "week" ? 3 : 10; }
 
+// ---- Timezone utility for IST (UTC+5:30) ----
+const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
+
+function getISTTimestamp(date) {
+    // Get timestamp adjusted for IST
+    return date.getTime() - IST_OFFSET_MS;
+}
+
 // ---- Data fetch: use the shared Groww chart proxy endpoint, fallback to seeded simulation ----
 async function fetchSeries(symbol){
   const targetSymbol = symbol === INDEX_SYMBOL ? INDEX_SYMBOL : symbol;
   const now = new Date();
-  const endTimeInMillis = now.getTime();
+  const endTimeInMillis = getISTTimestamp(now);
   const startDate = new Date(now);
   startDate.setMonth(startDate.getMonth() - 13);
-  const startTimeInMillis = startDate.getTime();
+  const startTimeInMillis = getISTTimestamp(startDate);
 
   const proxyUrl = `/api/stock-data?stock=${encodeURIComponent(targetSymbol)}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
   const res = await fetch(proxyUrl, {signal: AbortSignal.timeout(9000)});
