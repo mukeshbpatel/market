@@ -103,7 +103,7 @@
 
             try {
                 // Fetch data for all stocks
-                const fetchPromises = NIFTY_100_STOCKS.map(async (stock) => {
+                const results = await mapWithConcurrency([...new Set(NIFTY_100_STOCKS)], 5, async (stock) => {
                     try {
                         const startTimeInMillis = convertDateToISTTimestamp(startDateInput);
                         const endTimeInMillis = convertDateToISTTimestamp(endDateInput);
@@ -114,12 +114,15 @@
                         return null;
                     }
                 });
-
-                const results = await Promise.all(fetchPromises);
                 const validResults = results.filter(result => result !== null);
+                if (validResults.length === 0) {
+                    showError('No stock data was returned. Please try again later.');
+                    showLoading(false);
+                    return;
+                }
 
                 // Process all stock data
-                processAllStocksData(validResults);
+                processAllStocksData(validResults, startDate, endDate);
                 showLoading(false);
             } catch (error) {
                 showLoading(false);
@@ -127,18 +130,13 @@
             }
         }
 
-        function processAllStocksData(stockResults) {
-            // Generate consecutive 26-week range starting from the most recent week
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(endDate.getDate() - (26 * 7)); // 26 weeks ago
-
+        function processAllStocksData(stockResults, rangeStart, rangeEnd) {
             // Generate all weeks in the range
             allWeeks = [];
-            const currentWeek = new Date(startDate);
-            currentWeek.setDate(currentWeek.getDate() - currentWeek.getDay() + 1); // Start from Monday
+            const currentWeek = new Date(rangeStart);
+            currentWeek.setDate(currentWeek.getDate() - (currentWeek.getDay() === 0 ? 6 : currentWeek.getDay() - 1));
 
-            while (currentWeek <= endDate) {
+            while (currentWeek <= rangeEnd) {
                 // Create week key as YYYY-MM-DD format for Monday of the week
                 const year = currentWeek.getFullYear();
                 const month = String(currentWeek.getMonth() + 1).padStart(2, '0');
@@ -160,7 +158,7 @@
                     }
                     const date = convertISTTimestampToDate(timestamp);
                     const weekStart = new Date(date);
-                    weekStart.setDate(date.getDate() - date.getDay() + 1);
+                    weekStart.setDate(date.getDate() - (date.getDay() === 0 ? 6 : date.getDay() - 1));
                     // Create week key as YYYY-MM-DD format for Monday of the week
                     const year = weekStart.getFullYear();
                     const month = String(weekStart.getMonth() + 1).padStart(2, '0');

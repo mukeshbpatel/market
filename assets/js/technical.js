@@ -3,22 +3,8 @@ const TECH_ENVELOPE_DEFAULT_PERIOD = 200;
 const TECH_ENVELOPE_DEFAULT_PERCENT = 14;
 
 // Timezone utility for IST (UTC+5:30)
-const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in milliseconds
 
-function convertDateToISTTimestamp(dateString) {
-    // Parse date string (YYYY-MM-DD format from input)
-    const [year, month, day] = dateString.split('-').map(Number);
-    // Create date at midnight UTC
-    const utcDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
-    // Adjust to IST by subtracting IST offset to get the UTC timestamp for midnight IST
-    return utcDate.getTime() - IST_OFFSET_MS;
-}
 
-function convertISTTimestampToDate(timestamp) {
-    // Convert timestamp to date in IST
-    const date = new Date(timestamp + IST_OFFSET_MS);
-    return date;
-}
 
 let technicalRows = [];
 let technicalSortState = {
@@ -142,7 +128,7 @@ async function fetchTechnicalData() {
             return rankA - rankB || a.localeCompare(b);
         });
 
-        const results = await Promise.all(sortedStocks.map(async (stock) => {
+        const results = await mapWithConcurrency(sortedStocks, 5, async (stock) => {
             try {
                 const proxyUrl = `/api/stock-data?stock=${stock}&startTimeInMillis=${startTimeInMillis}&endTimeInMillis=${endTimeInMillis}`;
                 const response = await fetch(proxyUrl);
@@ -160,9 +146,12 @@ async function fetchTechnicalData() {
                 console.warn(`Failed to fetch data for ${stock}:`, error);
                 return null;
             }
-        }));
+        });
 
         technicalRows = results.filter(Boolean);
+        if (technicalRows.length === 0) {
+            showError('No stock data was returned. Please try again later.');
+        }
         buildTechnicalTable();
         showLoading(false);
     } catch (error) {

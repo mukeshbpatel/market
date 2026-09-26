@@ -19,29 +19,29 @@ function convertISTTimestampToDate(timestamp) {
 // NIFTY 100 stocks
 const NIFTY_100_STOCKS = [
     'TCS', 'INFY', 'HINDUNILVR', 'WIPRO', 'HCLTECH', 'TECHM', 'LT', 'MARUTI', 'M&M', 'ASIANPAINT', 'BAJAJ-AUTO', 'NESTLEIND', 'ULTRACEMCO',
-    'HEROMOTOCO', 'EICHER', 'APOLLOHOSP', 'KOTAKBANK', 'AXISBANK', 'HDFCBANK', 'ICICIBANK', 'SBIN',
-    'RELIANCE', 'JSWSTEEL', 'TATASTEEL', 'HINDALCO', 'SHRIRAMFIN', 'BEL', 'LIC', 'ABB',
+    'HEROMOTOCO', 'EICHERMOT', 'APOLLOHOSP', 'KOTAKBANK', 'AXISBANK', 'HDFCBANK', 'ICICIBANK', 'SBIN',
+    'RELIANCE', 'JSWSTEEL', 'TATASTEEL', 'HINDALCO', 'SHRIRAMFIN', 'BEL', 'LICI', 'ABB',
     'POWERGRID', 'NTPC', 'ADANIPORTS', 'ADANIENT', 'ITC', 'BRITANNIA', 'GODREJCP', 'CIPLA',
-    'PIDILITIND', 'COLPAL', 'MARICO', 'SUNPHARMA', 'DRREDDY', 'DIVISLAB', 'PHARMEASY', 'IPCALAB', 'AUBANK', 'POLYCAB', 'MRF', 'MUTHOOTFIN', 'CHOLAFIN', 'ALKEM', 'IDEA', 'KPITTECH',
-    'BAJAJFINSV', 'SBILIFE', 'HDFCLIFE', 'ICICIPRULI', 'INDUSINDBK', 'TITAN', 'GRASIM', 'AIRTELLORIG', 'TRENT', 'PIIND', 'DMART', 'PERSISTENT',
-    'BHARTIARTL', 'JIOFINANCE', 'YESBANK', 'DLF', 'SOBHA', 'PRESTIGE', 'PAGEIND',
-    'BHEL', 'GAIL', 'IOC', 'BPCL', 'HPCL', 'COALINDIA', 'NMDC', 'TATACHEM',
+    'PIDILITIND', 'COLPAL', 'MARICO', 'SUNPHARMA', 'DRREDDY', 'DIVISLAB', 'IPCALAB', 'AUBANK', 'POLYCAB', 'MRF', 'MUTHOOTFIN', 'CHOLAFIN', 'ALKEM', 'IDEA', 'KPITTECH',
+    'BAJAJFINSV', 'SBILIFE', 'HDFCLIFE', 'ICICIPRULI', 'INDUSINDBK', 'TITAN', 'GRASIM', 'TRENT', 'PIIND', 'DMART', 'PERSISTENT',
+    'BHARTIARTL', 'JIOFIN', 'YESBANK', 'DLF', 'SOBHA', 'PRESTIGE', 'PAGEIND',
+    'BHEL', 'GAIL', 'IOC', 'BPCL', 'HINDPETRO', 'COALINDIA', 'NMDC', 'TATACHEM',
     'MAHABANK', 'PNB', 'BANKBARODA', 'UNIONBANK', 'IRFC', 'HUDCO',
-    'SIEMENS', 'VOLTAS', 'WHIRLPOOL', 'HAVELLS', 'SYMPHONY', 'BOMDYEING', 'KALYANNVRTH','HAL', 'INDIAVIX'
+    'SIEMENS', 'VOLTAS', 'WHIRLPOOL', 'HAVELLS', 'SYMPHONY', 'BOMDYEING', 'KALYANKJIL','HAL', 'INDIAVIX'
 ];
 
 const MARKET_CAP_ORDER = [
     'RELIANCE', 'TCS', 'HDFCBANK', 'ICICIBANK', 'BEL', 'INFY', 'HINDUNILVR', 'KOTAKBANK', 'ITC', 'BHARTIARTL', 'NESTLEIND',
-    'SBIN', 'AXISBANK', 'LT', 'MARUTI', 'ASIANPAINT', 'NESTLEIND', 'HDFCLIFE', 'SBILIFE', 'LIC', 'TITAN',
-    'ULTRACEMCO', 'BAJAJFINSV', 'EICHER', 'BRITANNIA', 'APOLLOHOSP', 'SUNPHARMA', 'DRREDDY', 'DIVISLAB', 'POLYCAB', 'TRENT',
+    'SBIN', 'AXISBANK', 'LT', 'MARUTI', 'ASIANPAINT', 'NESTLEIND', 'HDFCLIFE', 'SBILIFE', 'LICI', 'TITAN',
+    'ULTRACEMCO', 'BAJAJFINSV', 'EICHERMOT', 'BRITANNIA', 'APOLLOHOSP', 'SUNPHARMA', 'DRREDDY', 'DIVISLAB', 'POLYCAB', 'TRENT',
     'POWERGRID', 'NTPC', 'ADANIENT', 'ADANIPORTS', 'JSWSTEEL', 'TATASTEEL', 'M&M',
     'HINDALCO', 'HCLTECH', 'WIPRO', 'TECHM', 'HAVELLS', 'GODREJCP', 'MARICO', 'PIDILITIND', 'MRF', 'MUTHOOTFIN', 'PIIND', 'CHOLAFIN', 'ALKEM', 'DMART', 'IDEA', 'KPITTECH', 'PERSISTENT',
-    'COLPAL', 'CIPLA', 'BPCL', 'IOC', 'HPCL', 'COALINDIA', 'TATACHEM',
-    'PAGEIND', 'DLF', 'SOBHA', 'PRESTIGE', 'JIOFINANCE', 'AIRTELLORIG', 'YESBANK',
+    'COLPAL', 'CIPLA', 'BPCL', 'IOC', 'COALINDIA', 'TATACHEM',
+    'PAGEIND', 'DLF', 'SOBHA', 'PRESTIGE', 'JIOFIN', 'YESBANK',
     'PNB', 'BANKBARODA', 'UNIONBANK', 'IRFC', 'MAHABANK', 'BHEL', 'GAIL', 'NMDC',
     'SIEMENS', 'ABB', 'VOLTAS', 'WHIRLPOOL',
     'SYMPHONY', 'BOMDYEING', 'HUDCO', 'IPCALAB', 'SHRIRAMFIN',
-    'HEROMOTOCO', 'BAJAJ-AUTO','HAL', 'INDIAVIX'
+    'HEROMOTOCO', 'BAJAJ-AUTO','HINDPETRO', 'KALYANKJIL', 'HAL', 'INDIAVIX'
 ];
 
 const MARKET_CAP_RANK = MARKET_CAP_ORDER.reduce((acc, symbol, index) => {
@@ -55,7 +55,7 @@ let allCandles = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    if (!document.getElementById('stockSelect')) {
+    if (!document.getElementById('stockSelect') || !document.getElementById('startDate') || !document.getElementById('endDate')) {
         return;
     }
 
@@ -124,6 +124,22 @@ async function fetchCandles(stock, startTimeInMillis, endTimeInMillis) {
     }
 
     return data.candles;
+}
+
+async function mapWithConcurrency(items, concurrency, mapper) {
+    const results = new Array(items.length);
+    let nextIndex = 0;
+
+    async function runWorker() {
+        while (nextIndex < items.length) {
+            const index = nextIndex++;
+            results[index] = await mapper(items[index], index);
+        }
+    }
+
+    const workerCount = Math.min(Math.max(1, concurrency), items.length);
+    await Promise.all(Array.from({ length: workerCount }, runWorker));
+    return results;
 }
 
 async function fetchStockData() {
