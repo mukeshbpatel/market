@@ -122,6 +122,7 @@ async function fetchTechnicalData() {
         const startTimeInMillis = convertDateToISTTimestamp(startDateInput);
         const endTimeInMillis = convertDateToISTTimestamp(endDateInput);
         const stocks = [...new Set(NIFTY_100_STOCKS)];
+        setLoadingProgress(0, stocks.length);
         const sortedStocks = stocks.sort((a, b) => {
             const rankA = MARKET_CAP_RANK[a] ?? Number.MAX_SAFE_INTEGER;
             const rankB = MARKET_CAP_RANK[b] ?? Number.MAX_SAFE_INTEGER;
@@ -146,7 +147,7 @@ async function fetchTechnicalData() {
                 console.warn(`Failed to fetch data for ${stock}:`, error);
                 return null;
             }
-        });
+        }, (current, total) => setLoadingProgress(current, total));
 
         technicalRows = results.filter(Boolean);
         if (technicalRows.length === 0) {
@@ -467,14 +468,14 @@ function createRsiCell(value) {
 
     if (value === null || Number.isNaN(value)) {
         cell.textContent = 'N/A';
-        cell.style.backgroundColor = '#f0f0f0';
-        cell.style.color = '#666';
+        cell.style.backgroundColor = '#202c39';
+        cell.style.color = '#9aabbd';
         return cell;
     }
 
     cell.textContent = value.toFixed(1);
     cell.style.backgroundColor = getRsiColor(value);
-    cell.style.color = value < 40 || value > 60 ? '#222' : '#333';
+    cell.style.color = '#e6edf4';
     cell.setAttribute('title', `RSI: ${value.toFixed(2)}`);
     return cell;
 }
@@ -485,29 +486,29 @@ function createDistanceCell(value) {
 
     if (value === null || Number.isNaN(value)) {
         cell.textContent = 'N/A';
-        cell.style.backgroundColor = '#f0f0f0';
-        cell.style.color = '#666';
+        cell.style.backgroundColor = '#202c39';
+        cell.style.color = '#9aabbd';
         return cell;
     }
 
     const formatted = `${value > 0 ? '+' : ''}${value.toFixed(2)}%`;
     cell.textContent = formatted;
-    cell.style.backgroundColor = value >= 0 ? '#e2f2e8' : '#f8d7da';
-    cell.style.color = value >= 0 ? '#0f5132' : '#842029';
+    cell.style.backgroundColor = value >= 0 ? '#1d4434' : '#492832';
+    cell.style.color = value >= 0 ? '#c9f3dc' : '#ffdce1';
     cell.setAttribute('title', `Distance from close: ${formatted}`);
     return cell;
 }
 
 function getRsiColor(rsi) {
     if (rsi < 40) {
-        return '#f8d7da';
+        return '#492832';
     }
 
     if (rsi > 60) {
-        return '#d1e7dd';
+        return '#1d4434';
     }
 
-    return '#f0f0f0';
+    return '#263442';
 }
 
 // Filter Functions

@@ -54,6 +54,7 @@ async function fetchAllStocksRSI() {
     // Fetch data for all stocks
     const stocks = [...new Set(MARKET_CAP_ORDER)]; // All stocks in market cap order
     const rsiResults = [];
+    updateLoadingProgress(0, stocks.length);
 
     try {
         for (let i = 0; i < stocks.length; i++) {
@@ -69,8 +70,6 @@ async function fetchAllStocksRSI() {
                     dailyRsi: rsiData.dailyRsi
                 });
 
-                // Update progress
-                updateLoadingProgress(i + 1, stocks.length);
             } catch (error) {
                 console.log(`Error fetching data for ${stock}: ${error.message}`);
                 rsiResults.push({
@@ -80,6 +79,7 @@ async function fetchAllStocksRSI() {
                     dailyRsi: null
                 });
             }
+            updateLoadingProgress(i + 1, stocks.length);
 
             // Add small delay to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, 100));
@@ -334,7 +334,7 @@ function updateRSISortIndicators() {
 
         if (sortKey === rsiSortState.column) {
             indicator.textContent = rsiSortState.direction === 'asc' ? '▲' : '▼';
-            indicator.style.color = '#667eea';
+            indicator.style.color = '#55b5d0';
         } else {
             indicator.textContent = '';
         }
@@ -397,36 +397,32 @@ function getDailyColor(rsi) {
 }
 
 function getRSIColor(rsi) {
-    // Unified RSI color function for all columns
-    // RSI > 60: shades of green
     if (rsi > 60) {
         const intensity = Math.min((rsi - 60) / 40, 1);
-        const red = Math.round(144 - (144 * intensity));
-        const green = Math.round(238 - (16 * intensity));
-        const blue = Math.round(144 - (144 * intensity));
+        const red = Math.round(35 - (22 * intensity));
+        const green = Math.round(79 + (45 * intensity));
+        const blue = Math.round(57 + (10 * intensity));
         return `rgb(${red}, ${green}, ${blue})`;
     }
-    // RSI < 40: shades of red
     else if (rsi < 40) {
         const intensity = Math.min((40 - rsi) / 40, 1);
-        const red = Math.round(255 * (0.5 + 0.5 * intensity));
-        const green = Math.round(182 - (182 * intensity));
-        const blue = Math.round(198 - (198 * intensity));
+        const red = Math.round(65 + (34 * intensity));
+        const green = Math.round(37 - (20 * intensity));
+        const blue = Math.round(48 - (18 * intensity));
         return `rgb(${red}, ${green}, ${blue})`;
     }
-    // RSI between 40 and 60: shades of yellow
     else {
         const intensity = (rsi - 40) / 20;
-        const red = Math.round(255);
-        const green = Math.round(200 + (55 * intensity));
-        const blue = Math.round(0 + (55 * intensity));
+        const red = Math.round(85 + (18 * intensity));
+        const green = Math.round(73 + (13 * intensity));
+        const blue = Math.round(31 + (5 * intensity));
         return `rgb(${red}, ${green}, ${blue})`;
     }
 }
 
 function updateLoadingProgress(current, total) {
-    const loading = document.getElementById('loading');
-    loading.textContent = `⏳ Fetching data and calculating RSI for all stocks... (${current}/${total})`;
+    setLoadingProgress(current, total);
+    document.getElementById('loadingMessage').textContent = `⏳ Fetching data and calculating RSI for all stocks... (${current}/${total})`;
 }
 
 function showError(message) {

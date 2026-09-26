@@ -135,7 +135,12 @@ chart size in<!DOCTYPE html>
         </div>
 
         <div class="error" id="errorMsg"></div>
-        <div class="loading" id="loading">⏳ Fetching technical data for all stocks... This may take a moment.</div>
+        <div class="loading" id="loading">
+            <div>⏳ Fetching technical data for all stocks...</div>
+            <div class="loading-progress-track" role="progressbar" aria-label="Technical data loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="loading-progress-bar" id="loadingProgressBar"></div>
+            </div>
+        </div>
 
         <div class="table-wrapper" id="tableWrapper" style="display: none;">
             <table id="technicalTable">
@@ -160,19 +165,19 @@ chart size in<!DOCTYPE html>
             <h3>Indicator Guide</h3>
             <div class="legend-items">
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #f8d7da; color: #842029;">&lt; 40</div>
+                    <div class="legend-color" style="background: #492832; color: #ffdce1;">&lt; 40</div>
                     <span>RSI oversold</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #d1e7dd; color: #0f5132;">&gt; 60</div>
+                    <div class="legend-color" style="background: #1d4434; color: #c9f3dc;">&gt; 60</div>
                     <span>RSI overbought</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #f0f0f0; color: #333;">40-60</div>
+                    <div class="legend-color" style="background: #263442; color: #d5e0e9;">40-60</div>
                     <span>RSI neutral</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background: #fff4e5;">&nbsp;</div>
+                    <div class="legend-color" style="background: #493a25;">&nbsp;</div>
                     <span>Outside envelope band</span>
                 </div>
             </div>

@@ -125,7 +125,7 @@ function renderCharts(quarters) {
             datasets: [{
                 label: 'PAT',
                 data: patValues,
-                backgroundColor: '#667eea'
+                backgroundColor: '#55b5d0'
             }]
         },
         options: chartOptions('₹ Crores')
@@ -138,7 +138,7 @@ function renderCharts(quarters) {
             datasets: [{
                 label: 'Operating Cash Flow',
                 data: cashFlowValues,
-                backgroundColor: '#22bb33'
+                backgroundColor: '#69c99a'
             }]
         },
         options: chartOptions('₹ Crores')
@@ -297,20 +297,33 @@ function chartOptions(yLabel) {
         scales: {
             y: {
                 beginAtZero: false,
+                grid: { color: '#263544' },
+                ticks: { color: '#9aabbd' },
                 title: {
                     display: true,
-                    text: yLabel
+                    text: yLabel,
+                    color: '#c7d3de'
                 }
+            },
+            x: {
+                grid: { color: '#263544' },
+                ticks: { color: '#9aabbd' }
             }
         },
         plugins: {
             legend: {
-                display: false
+                display: false,
+                labels: { color: '#d7e1ea' }
             },
             filler: {
                 propagate: true
             },
             tooltip: {
+                backgroundColor: '#172330',
+                titleColor: '#e6edf4',
+                bodyColor: '#d1dce6',
+                borderColor: '#34485a',
+                borderWidth: 1,
                 callbacks: {
                     label: (context) => `${context.dataset.label}: ₹${formatValue(context.raw)} Crores`
                 }

@@ -13,20 +13,25 @@
         <p class="subtitle">Real-time Relative Strength Index (RSI) for all NIFTY 100 stocks across multiple timeframes.</p>
 
         <div class="error" id="errorMsg"></div>
-        <div class="loading" id="loading">⏳ Fetching data and calculating RSI for all stocks... This may take a moment.</div>
+        <div class="loading" id="loading">
+            <div id="loadingMessage">⏳ Fetching data and calculating RSI for all stocks... This may take a moment.</div>
+            <div class="loading-progress-track" role="progressbar" aria-label="RSI data loading progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <div class="loading-progress-bar" id="loadingProgressBar"></div>
+            </div>
+        </div>
 
         <!-- Legend -->
         <div class="rsi-legend">
             <div class="legend-item">
-                <span class="legend-color" style="background: linear-gradient(to right, #90EE90, #228B22);"></span>
+                <span class="legend-color" style="background: linear-gradient(to right, #1b3d2c, #185c42);"></span>
                 <span>RSI > 60 (Green)</span>
             </div>
             <div class="legend-item">
-                <span class="legend-color" style="background: linear-gradient(to right, #FFD700, #FFFF00);"></span>
+                <span class="legend-color" style="background: linear-gradient(to right, #55491f, #75612d);"></span>
                 <span>RSI 40-60 (Yellow)</span>
             </div>
             <div class="legend-item">
-                <span class="legend-color" style="background: linear-gradient(to right, #FFB6C6, #DC143C);"></span>
+                <span class="legend-color" style="background: linear-gradient(to right, #41252f, #63212d);"></span>
                 <span>RSI < 40 (Red)</span>
             </div>
         </div>

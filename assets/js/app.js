@@ -126,20 +126,35 @@ async function fetchCandles(stock, startTimeInMillis, endTimeInMillis) {
     return data.candles;
 }
 
-async function mapWithConcurrency(items, concurrency, mapper) {
+async function mapWithConcurrency(items, concurrency, mapper, onProgress) {
     const results = new Array(items.length);
     let nextIndex = 0;
+    let completed = 0;
 
     async function runWorker() {
         while (nextIndex < items.length) {
             const index = nextIndex++;
             results[index] = await mapper(items[index], index);
+            completed += 1;
+            onProgress?.(completed, items.length);
         }
     }
 
     const workerCount = Math.min(Math.max(1, concurrency), items.length);
     await Promise.all(Array.from({ length: workerCount }, runWorker));
     return results;
+}
+
+function setLoadingProgress(current, total) {
+    const progress = total ? Math.round((current / total) * 100) : 0;
+    const progressBar = document.getElementById('loadingProgressBar');
+    const progressTrack = progressBar?.parentElement;
+    if (!progressBar || !progressTrack) {
+        return;
+    }
+
+    progressBar.style.width = `${progress}%`;
+    progressTrack.setAttribute('aria-valuenow', progress);
 }
 
 async function fetchStockData() {
@@ -281,8 +296,8 @@ function buildTable(yearlyData, monthlyChanges, candles) {
             } else {
                 cell.className = 'month-cell neutral';
                 cell.textContent = 'N/A';
-                cell.style.backgroundColor = '#f0f0f0';
-                cell.style.color = '#999';
+                cell.style.backgroundColor = '#202c39';
+                cell.style.color = '#9aabbd';
             }
 
             row.appendChild(cell);
@@ -305,8 +320,8 @@ function buildTable(yearlyData, monthlyChanges, candles) {
         } else {
             yearlyCell.className = 'month-cell neutral';
             yearlyCell.textContent = 'N/A';
-            yearlyCell.style.backgroundColor = '#f0f0f0';
-            yearlyCell.style.color = '#999';
+            yearlyCell.style.backgroundColor = '#202c39';
+            yearlyCell.style.color = '#9aabbd';
         }
         row.appendChild(yearlyCell);
 
@@ -320,33 +335,30 @@ function getColor(changePercent) {
     const absChange = Math.abs(changePercent);
 
     if (changePercent === 0) {
-        return '#f0f0f0';
+        return '#202c39';
     }
 
     if (changePercent > 0) {
-        if (absChange <= 2) return '#d4f8d4';
-        if (absChange <= 5) return '#a3eaa3';
-        if (absChange <= 10) return '#67d867';
-        if (absChange <= 15) return '#33c133';
-        if (absChange <= 20) return '#2a9a2a';
-        if (absChange <= 25) return '#1f7a1f';
-        return '#145f14';
+        if (absChange <= 2) return '#162c25';
+        if (absChange <= 5) return '#18372b';
+        if (absChange <= 10) return '#1a4231';
+        if (absChange <= 15) return '#1c4d37';
+        if (absChange <= 20) return '#1e583d';
+        if (absChange <= 25) return '#206343';
+        return '#226e49';
     }
 
-    if (absChange <= 2) return '#fde2e2';
-    if (absChange <= 5) return '#f7b7b7';
-    if (absChange <= 10) return '#f18a8a';
-    if (absChange <= 15) return '#e75d5d';
-    if (absChange <= 20) return '#d83c3c';
-    if (absChange <= 25) return '#b72525';
-    return '#8a1818';
+    if (absChange <= 2) return '#342027';
+    if (absChange <= 5) return '#40232b';
+    if (absChange <= 10) return '#4c2630';
+    if (absChange <= 15) return '#582934';
+    if (absChange <= 20) return '#642c38';
+    if (absChange <= 25) return '#702f3c';
+    return '#7c3240';
 }
 
 function getTextColor(changePercent) {
-    if (Math.abs(changePercent) > 25) {
-        return '#fff'; // White text for very strong changes with darker backgrounds
-    }
-    return '#333'; // Dark text for better contrast on light backgrounds
+    return '#e8f0f5';
 }
 
 function displayStockInfo(candles, startPrice, endPrice) {
@@ -448,16 +460,16 @@ function showYearChart(year) {
                 label: 'Candlestick',
                 data: candlestickData,
                 color: {
-                    up: '#22bb33',
-                    down: '#c41e3a',
-                    unchanged: '#999'
+                    up: '#69c99a',
+                    down: '#ed8188',
+                    unchanged: '#9aabbd'
                 }
             }, {
                 label: 'EMA 20',
                 type: 'line',
                 data: emaData,
-                borderColor: '#667eea',
-                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                borderColor: '#55b5d0',
+                backgroundColor: 'rgba(85, 181, 208, 0.12)',
                 fill: false,
                 pointRadius: 0,
                 borderWidth: 2
@@ -478,20 +490,30 @@ function showYearChart(year) {
                         }
                     },
                     ticks: {
+                        color: '#9aabbd',
                         maxTicksLimit: 12
-                    }
+                    },
+                    grid: { color: '#263544' }
                 },
                 y: {
-                    beginAtZero: false
+                    beginAtZero: false,
+                    ticks: { color: '#9aabbd' },
+                    grid: { color: '#263544' }
                 }
             },
             plugins: {
                 legend: {
-                    display: true
+                    display: true,
+                    labels: { color: '#d7e1ea' }
                 },
                 tooltip: {
                     mode: 'index',
-                    intersect: false
+                    intersect: false,
+                    backgroundColor: '#172330',
+                    titleColor: '#e6edf4',
+                    bodyColor: '#d1dce6',
+                    borderColor: '#34485a',
+                    borderWidth: 1
                 }
             }
         }
